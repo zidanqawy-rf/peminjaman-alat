@@ -45,6 +45,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('users/{user}/edit', [\App\Http\Controllers\Admin\UserController::class, 'edit'])->name('users.edit');
         Route::put('users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'update'])->name('users.update');
         Route::delete('users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('users.destroy');
+
+        // User import
+        Route::get('users/import/form', [\App\Http\Controllers\Admin\UserImportController::class, 'showImportForm'])->name('users.import.form');
+        Route::post('users/import', [\App\Http\Controllers\Admin\UserImportController::class, 'import'])->name('users.import');
+        Route::get('users/import/template', [\App\Http\Controllers\Admin\UserImportController::class, 'downloadTemplate'])->name('users.template');
     });
 });
 
