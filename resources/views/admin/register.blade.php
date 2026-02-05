@@ -206,7 +206,7 @@
                                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition @error('role') border-red-500 @enderror">
                                     <option value="">Pilih Role</option>
                                     <option value="user" {{ old('role') == 'user' ? 'selected' : '' }}>User</option>
-                                    <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin
+                                    <option value="petugas" {{ old('role') == 'petugas' ? 'selected' : '' }}>Petugas
                                     </option>
                                 </select>
                                 @error('role')

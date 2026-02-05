@@ -11,7 +11,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->validateCsrfTokens(except: [
+            'petugas/login',
+            'petugas/logout',
+            'admin/login',
+            'admin/logout',
+            'admin/petugas',
+            'admin/petugas/*',
+            'admin/register',
+            'admin/users/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

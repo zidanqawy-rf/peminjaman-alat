@@ -9,6 +9,11 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Login redirect routes
+Route::get('/login', function () {
+    return redirect()->route('petugas.login');
+})->name('login');
+
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -33,12 +38,26 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-        // User management
+        // User management (includes petugas)
         Route::get('users', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('users.index');
         Route::get('register', [\App\Http\Controllers\Admin\UserController::class, 'create'])->name('register');
         Route::post('register', [\App\Http\Controllers\Admin\UserController::class, 'store'])->name('register.post');
         Route::get('users/{user}/edit', [\App\Http\Controllers\Admin\UserController::class, 'edit'])->name('users.edit');
         Route::put('users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'update'])->name('users.update');
         Route::delete('users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('users.destroy');
+    });
+});
+
+Route::prefix('petugas')->name('petugas.')->group(function () {
+    Route::get('login', [\App\Http\Controllers\Auth\PetugasAuthController::class, 'showLoginForm'])->name('login');
+    Route::post('login', [\App\Http\Controllers\Auth\PetugasAuthController::class, 'login'])->name('login.post');
+    Route::post('logout', [\App\Http\Controllers\Auth\PetugasAuthController::class, 'logout'])->name('logout');
+
+    Route::middleware(['auth', \App\Http\Middleware\Petugas::class])->group(function () {
+        Route::get('/', function () {
+            return redirect()->route('petugas.dashboard');
+        })->name('home');
+
+        Route::get('dashboard', [\App\Http\Controllers\Petugas\DashboardController::class, 'index'])->name('dashboard');
     });
 });

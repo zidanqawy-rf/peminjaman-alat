@@ -17,31 +17,37 @@
 
 ### 1. Role-Based Access Control
 
-The application implements role-based authorization via the `role` column in the `users` table (default: 'user', possible values: 'user', 'admin'):
+The application implements role-based authorization via the `role` column in the `users` table (default: 'user', possible values: 'user', 'petugas', 'admin'):
 
 - **Admin Middleware** ([App\Http\Middleware\Admin](app/Http/Middleware/Admin.php)): Checks `$user->role === 'admin'`, redirects to `admin.login` if not authorized
-- **User Model** includes `isAdmin()` method for checking admin status
-- Admin routes are prefixed with `/admin` and use the Admin middleware
-- Regular users access `/dashboard` after authentication; admins access `/admin/dashboard`
+- **Petugas Middleware** ([App\Http\Middleware\Petugas](app/Http/Middleware/Petugas.php)): Checks `$user->role === 'petugas'`, redirects to `petugas.login` if not authorized
+- **User Model** includes `isAdmin()` and `isPetugas()` methods for role checking
+- Route structure:
+    - Regular users: `/dashboard` (via Breeze)
+    - Admins: `/admin/login` → `/admin/dashboard`
+    - Petugas (Officers): `/petugas/login` → `/petugas/dashboard`
 
 **Related files:**
 
-- [app/Http/Middleware/Admin.php](app/Http/Middleware/Admin.php) — Authorization logic
+- [app/Http/Middleware/Admin.php](app/Http/Middleware/Admin.php) — Admin authorization
+- [app/Http/Middleware/Petugas.php](app/Http/Middleware/Petugas.php) — Petugas authorization
 - [app/Models/User.php](app/Models/User.php) — User model with role support
 - [routes/web.php](routes/web.php) — Route definitions with middleware groups
 
 ### 2. Authentication Flow
 
 - **User Registration:** Via Breeze (auto-generated routes in [routes/auth.php](routes/auth.php))
-- **Admin Registration:** Only admins can create users via `/admin/register` → [App\Http\Controllers\Admin\UserController@store](app/Http/Controllers/Admin/UserController.php)
+- **Admin Registration:** Only admins can create users (User/Petugas/Admin) via `/admin/register` → [App\Http\Controllers\Admin\UserController@store](app/Http/Controllers/Admin/UserController.php)
 - **Admin Login:** Separate endpoint at `/admin/login` via [App\Http\Controllers\Auth\AdminAuthController](app/Http/Controllers/Auth/AdminAuthController.php)
+- **Petugas Login:** Separate endpoint at `/petugas/login` via [App\Http\Controllers\Auth\PetugasAuthController](app/Http/Controllers/Auth/PetugasAuthController.php)
 - **Session Management:** Laravel's session-based authentication with remember token support
+- **Login Redirect Logic:** If petugas tries to login via admin portal, auto-redirects to petugas login page
 
 ### 3. Database Schema
 
 Core tables managed via migrations in [database/migrations/](database/migrations/):
 
-- `users`: id, name, email, password, role (default 'user'), email_verified_at, remember_token, timestamps
+- `users`: id, name, email, password, role (default 'user', values: 'user'/'petugas'/'admin'), email_verified_at, remember_token, timestamps
 - `password_reset_tokens`: email, token, created_at
 - `sessions`: id, user_id, ip_address, user_agent, payload, last_activity
 

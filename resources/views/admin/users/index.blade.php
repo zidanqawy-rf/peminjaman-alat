@@ -51,6 +51,9 @@
                                 @if ($user->isAdmin())
                                     <span
                                         class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold">Admin</span>
+                                @elseif ($user->isPetugas())
+                                    <span
+                                        class="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-semibold">Petugas</span>
                                 @else
                                     <span
                                         class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">User</span>
@@ -156,6 +159,7 @@
                     <select name="role" id="role"
                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="user">User</option>
+                        <option value="petugas">Petugas</option>
                     </select>
                 </div>
 
@@ -203,7 +207,7 @@
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             :value="editUserData?.role || 'user'">
                             <option value="user">User</option>
-                            <option value="admin">Admin</option>
+                            <option value="petugas">Petugas</option>
                         </select>
                     </div>
 

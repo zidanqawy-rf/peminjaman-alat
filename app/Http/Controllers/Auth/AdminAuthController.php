@@ -26,6 +26,12 @@ class AdminAuthController extends Controller
             $user = Auth::user();
             if (($user->role ?? '') !== 'admin') {
                 Auth::logout();
+                
+                // Jika petugas, redirect ke petugas login
+                if ($user->role === 'petugas') {
+                    return redirect()->route('petugas.login')->with('message', 'Silakan login menggunakan halaman login petugas.');
+                }
+                
                 return back()->withErrors(['email' => 'Anda bukan admin.']);
             }
 
