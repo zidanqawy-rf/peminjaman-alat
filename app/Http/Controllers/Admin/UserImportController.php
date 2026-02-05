@@ -94,11 +94,23 @@ class UserImportController extends Controller
         }
 
         $message = "$imported user berhasil diimport.";
+        
+        // Return JSON response
         if (!empty($errors)) {
-            $message .= " " . count($errors) . " baris error.";
+            return response()->json([
+                'success' => false,
+                'message' => $message . " " . count($errors) . " baris error.",
+                'imported' => $imported,
+                'errors' => $errors
+            ], 400);
         }
 
-        return redirect()->route('admin.users.index')->with('message', $message)->with('import_errors', $errors);
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'imported' => $imported,
+            'errors' => []
+        ]);
     }
 
     public function downloadTemplate()
