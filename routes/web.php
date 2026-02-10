@@ -74,8 +74,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/', [PeminjamanController::class, 'store'])->name('store');
         Route::get('/{peminjaman}', [PeminjamanController::class, 'show'])->name('show');
         
-        // USER: Ajukan pengembalian
+        // USER: Ajukan pengembalian (dengan foto & tanggal)
         Route::post('/{peminjaman}/ajukan-pengembalian', [PeminjamanController::class, 'ajukanPengembalian'])->name('ajukan-pengembalian');
+        
+        // USER: Upload bukti pembayaran denda
+        Route::post('/{peminjaman}/upload-bukti-pembayaran', [PeminjamanController::class, 'uploadBuktiPembayaran'])->name('upload-bukti-pembayaran');
     });
     
     // Route untuk mencari alat (AJAX)
@@ -169,6 +172,10 @@ Route::prefix('petugas')->name('petugas.')->group(function () {
             Route::patch('/{peminjaman}/reject', [\App\Http\Controllers\Petugas\PeminjamanController::class, 'reject'])->name('reject');
             Route::patch('/{peminjaman}/serahkan', [\App\Http\Controllers\Petugas\PeminjamanController::class, 'serahkan'])->name('serahkan');
             Route::patch('/{peminjaman}/terima-kembali', [\App\Http\Controllers\Petugas\PeminjamanController::class, 'terimaKembali'])->name('terima-kembali');
+            
+            // PETUGAS: Verifikasi pembayaran denda
+            Route::patch('/{peminjaman}/verifikasi-pembayaran', [\App\Http\Controllers\Petugas\PeminjamanController::class, 'verifikasiPembayaran'])->name('verifikasi-pembayaran');
+            Route::patch('/{peminjaman}/tolak-pembayaran', [\App\Http\Controllers\Petugas\PeminjamanController::class, 'tolakPembayaran'])->name('tolak-pembayaran');
         });
     });
 });

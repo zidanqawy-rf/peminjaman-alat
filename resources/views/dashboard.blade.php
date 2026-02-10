@@ -41,14 +41,18 @@
                 </div>
             </div>
 
-            <!-- Statistics Cards (Optional) -->
+            <!-- Statistics Cards -->
             @php
                 $totalPeminjaman = \App\Models\Peminjaman::where('user_id', Auth::id())->count();
                 $menunggu = \App\Models\Peminjaman::where('user_id', Auth::id())->where('status', 'menunggu')->count();
                 $dipinjam = \App\Models\Peminjaman::where('user_id', Auth::id())->where('status', 'dipinjam')->count();
+                $adaDenda = \App\Models\Peminjaman::where('user_id', Auth::id())
+                    ->where('denda', '>', 0)
+                    ->whereIn('status_pembayaran_denda', ['belum_bayar', 'menunggu_verifikasi'])
+                    ->count();
             @endphp
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <!-- Total Peminjaman -->
                 <div class="bg-white rounded-lg shadow-md p-6">
                     <div class="flex items-center justify-between">
@@ -93,7 +97,86 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- CARD BARU: Ada Denda -->
+                <div class="bg-white rounded-lg shadow-md p-6 {{ $adaDenda > 0 ? 'ring-2 ring-red-400' : '' }}">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Ada Denda</p>
+                            <p class="text-3xl font-bold {{ $adaDenda > 0 ? 'text-red-600' : 'text-gray-400' }} mt-2">
+                                {{ $adaDenda }}
+                            </p>
+                            @if($adaDenda > 0)
+                                <a href="{{ route('peminjaman.index') }}" class="text-xs text-red-600 hover:text-red-800 font-medium mt-1 inline-block">
+                                    Lihat Detail →
+                                </a>
+                            @endif
+                        </div>
+                        <div class="bg-red-100 rounded-full w-12 h-12 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            <!-- Alert Denda (jika ada) -->
+            @if($adaDenda > 0)
+                @php
+                    $peminjamanDenda = \App\Models\Peminjaman::with(['alat.kategori'])
+                        ->where('user_id', Auth::id())
+                        ->where('denda', '>', 0)
+                        ->whereIn('status_pembayaran_denda', ['belum_bayar', 'menunggu_verifikasi'])
+                        ->get();
+                    $totalDenda = $peminjamanDenda->sum('denda');
+                @endphp
+                
+                <div class="mb-8 bg-red-50 border-l-4 border-red-500 p-6 rounded-lg shadow-md">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <svg class="h-6 w-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <h3 class="text-lg font-semibold text-red-900 mb-2">⚠️ Perhatian: Anda Memiliki Denda!</h3>
+                            <p class="text-sm text-red-800 mb-3">
+                                Anda memiliki <strong>{{ $adaDenda }} peminjaman</strong> dengan total denda sebesar 
+                                <strong class="text-lg">Rp {{ number_format($totalDenda, 0, ',', '.') }}</strong>
+                            </p>
+                            <div class="space-y-2">
+                                @foreach($peminjamanDenda as $item)
+                                    <div class="bg-white p-3 rounded border border-red-200">
+                                        <div class="flex justify-between items-start">
+                                            <div class="flex-1">
+                                                <p class="font-semibold text-gray-900">
+                                                    {{ $item->alat ? ($item->alat->nama ?? $item->alat->nama_alat ?? 'Alat tidak tersedia') : 'Alat tidak tersedia' }}
+                                                </p>
+                                                <p class="text-xs text-gray-600">
+                                                    Terlambat {{ $item->jumlah_hari_terlambat ?? $item->hari_terlambat ?? 0 }} hari
+                                                </p>
+                                            </div>
+                                            <div class="text-right">
+                                                <p class="font-bold text-red-600">Rp {{ number_format($item->denda, 0, ',', '.') }}</p>
+                                                @if($item->status_pembayaran_denda === 'belum_bayar')
+                                                    <span class="text-xs px-2 py-1 bg-red-100 text-red-700 rounded">Belum Bayar</span>
+                                                @elseif($item->status_pembayaran_denda === 'menunggu_verifikasi')
+                                                    <span class="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded">Verifikasi</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <a href="{{ route('peminjaman.show', $item) }}" 
+                                           class="text-xs text-blue-600 hover:text-blue-800 font-medium mt-2 inline-block">
+                                            Upload Bukti Pembayaran →
+                                        </a>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
             <!-- Features Section -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -145,7 +228,7 @@
 
             <!-- Recent Borrowings (Optional) -->
             @php
-                $recentPeminjaman = \App\Models\Peminjaman::with('alat')
+                $recentPeminjaman = \App\Models\Peminjaman::with(['alat.kategori'])
                     ->where('user_id', Auth::id())
                     ->latest()
                     ->limit(5)
@@ -168,20 +251,23 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Pinjam</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Kembali</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Denda</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @foreach($recentPeminjaman as $item)
                             <tr class="hover:bg-gray-50">
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">{{ $item->alat->nama }}</div>
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ $item->alat ? ($item->alat->nama ?? $item->alat->nama_alat ?? 'Alat tidak tersedia') : 'Alat tidak tersedia' }}
+                                    </div>
                                     <div class="text-sm text-gray-500">{{ $item->jumlah }} unit</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ $item->tanggal_pinjam->format('d M Y') }}
+                                    {{ $item->tanggal_pinjam ? $item->tanggal_pinjam->format('d M Y') : '-' }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ $item->tanggal_kembali->format('d M Y') }}
+                                    {{ $item->tanggal_kembali ? \Carbon\Carbon::parse($item->tanggal_kembali)->format('d M Y') : '-' }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     @switch($item->status)
@@ -200,6 +286,11 @@
                                                 Dipinjam
                                             </span>
                                             @break
+                                        @case('pengajuan_pengembalian')
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                                                Pengajuan
+                                            </span>
+                                            @break
                                         @case('dikembalikan')
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
                                                 Dikembalikan
@@ -211,6 +302,13 @@
                                             </span>
                                             @break
                                     @endswitch
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    @if($item->denda > 0)
+                                        <span class="font-semibold text-red-600">Rp {{ number_format($item->denda, 0, ',', '.') }}</span>
+                                    @else
+                                        <span class="text-gray-400">-</span>
+                                    @endif
                                 </td>
                             </tr>
                             @endforeach

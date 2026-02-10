@@ -30,6 +30,55 @@
                 </div>
             @endif
 
+            <!-- Pesan Warning -->
+            @if (session('warning'))
+                <div class="mb-6 rounded-md border-l-4 border-yellow-500 bg-yellow-50 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-yellow-800">{{ session('warning') }}</p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            <!-- Pesan Error -->
+            @if (session('error'))
+                <div class="mb-6 rounded-md border-l-4 border-red-500 bg-red-50 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-red-800">{{ session('error') }}</p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            @if ($errors->any())
+                <div class="mb-6 rounded-md border-l-4 border-red-500 bg-red-50 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            @foreach ($errors->all() as $error)
+                                <p class="text-sm font-medium text-red-800">{{ $error }}</p>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <!-- Statistik Ringkas -->
             <div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <!-- Total Peminjaman -->
@@ -137,17 +186,32 @@
                                         {{ $peminjaman->firstItem() + $index }}
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="text-sm font-medium text-gray-900">{{ $item->alat->nama }}</div>
-                                        <div class="text-sm text-gray-500">{{ $item->alat->kategori }}</div>
+                                        {{-- PERBAIKAN UTAMA: Null check untuk alat --}}
+                                        @if($item->alat)
+                                            <div class="text-sm font-medium text-gray-900">
+                                                {{ $item->alat->nama ?? $item->alat->nama_alat ?? 'N/A' }}
+                                            </div>
+                                            <div class="text-sm text-gray-500">{{ $item->alat->kategori ?? '-' }}</div>
+                                        @else
+                                            <div class="flex items-center">
+                                                <svg class="h-5 w-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                                </svg>
+                                                <div>
+                                                    <div class="text-sm font-medium text-red-600">Alat Tidak Ditemukan</div>
+                                                    <div class="text-xs text-gray-500">Data telah dihapus</div>
+                                                </div>
+                                            </div>
+                                        @endif
                                     </td>
                                     <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                                         {{ $item->jumlah }} unit
                                     </td>
                                     <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                                        {{ $item->tanggal_pinjam->format('d M Y') }}
+                                        {{ \Carbon\Carbon::parse($item->tanggal_pinjam)->format('d M Y') }}
                                     </td>
                                     <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                                        {{ $item->tanggal_kembali->format('d M Y') }}
+                                        {{ \Carbon\Carbon::parse($item->tanggal_kembali)->format('d M Y') }}
                                     </td>
                                     <td class="whitespace-nowrap px-6 py-4">
                                         @switch($item->status)
@@ -176,6 +240,15 @@
                                                     Ditolak
                                                 </span>
                                                 @break
+                                            @case('pengajuan_pengembalian')
+                                                <span class="inline-flex rounded-full bg-purple-100 px-2 py-1 text-xs font-semibold leading-5 text-purple-800">
+                                                    Pengajuan Pengembalian
+                                                </span>
+                                                @break
+                                            @default
+                                                <span class="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold leading-5 text-gray-800">
+                                                    {{ ucfirst($item->status) }}
+                                                </span>
                                         @endswitch
                                     </td>
                                     <td class="whitespace-nowrap px-6 py-4 text-sm font-medium">

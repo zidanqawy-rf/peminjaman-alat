@@ -41,7 +41,7 @@
             @endif
 
             <!-- Statistik Cards -->
-            <div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+            <div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
                 <div class="overflow-hidden rounded-lg bg-white shadow">
                     <div class="p-5">
                         <div class="flex items-center">
@@ -117,9 +117,27 @@
                 <div class="overflow-hidden rounded-lg bg-white shadow">
                     <div class="p-5">
                         <div class="flex items-center">
-                            <div class="flex-shrink-0 rounded-md bg-gray-500 p-3">
+                            <div class="flex-shrink-0 rounded-md bg-purple-500 p-3">
                                 <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                                </svg>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="truncate text-sm font-medium text-gray-500">Pengajuan</dt>
+                                    <dd class="text-lg font-semibold text-gray-900">{{ $stats['pengajuan_pengembalian'] }}</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-hidden rounded-lg bg-white shadow">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 rounded-md bg-gray-500 p-3">
+                                <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                 </svg>
                             </div>
                             <div class="ml-5 w-0 flex-1">
@@ -149,12 +167,31 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- CARD BARU: Statistik Denda -->
+                <div class="overflow-hidden rounded-lg bg-white shadow border-2 border-orange-300">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 rounded-md bg-orange-500 p-3">
+                                <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="truncate text-sm font-medium text-gray-500">Perlu Verif</dt>
+                                    <dd class="text-lg font-semibold text-gray-900">{{ $stats['menunggu_verifikasi_bayar'] }}</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Filter & Search -->
             <div class="mb-6 overflow-hidden bg-white shadow-sm sm:rounded-lg">
                 <div class="p-6">
-                    <form method="GET" action="{{ route('petugas.peminjaman.index') }}" class="grid gap-4 md:grid-cols-3">
+                    <form method="GET" action="{{ route('petugas.peminjaman.index') }}" class="grid gap-4 md:grid-cols-4">
                         <!-- Search -->
                         <div>
                             <label for="search" class="block text-sm font-medium text-gray-700">Cari</label>
@@ -165,15 +202,28 @@
 
                         <!-- Filter Status -->
                         <div>
-                            <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                            <label for="status" class="block text-sm font-medium text-gray-700">Status Peminjaman</label>
                             <select name="status" id="status"
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                 <option value="">Semua Status</option>
                                 <option value="menunggu" {{ request('status') == 'menunggu' ? 'selected' : '' }}>Menunggu</option>
                                 <option value="disetujui" {{ request('status') == 'disetujui' ? 'selected' : '' }}>Disetujui</option>
                                 <option value="dipinjam" {{ request('status') == 'dipinjam' ? 'selected' : '' }}>Dipinjam</option>
+                                <option value="pengajuan_pengembalian" {{ request('status') == 'pengajuan_pengembalian' ? 'selected' : '' }}>Pengajuan Pengembalian</option>
                                 <option value="dikembalikan" {{ request('status') == 'dikembalikan' ? 'selected' : '' }}>Dikembalikan</option>
                                 <option value="ditolak" {{ request('status') == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
+                            </select>
+                        </div>
+
+                        <!-- Filter Pembayaran Denda -->
+                        <div>
+                            <label for="pembayaran" class="block text-sm font-medium text-gray-700">Status Pembayaran Denda</label>
+                            <select name="pembayaran" id="pembayaran"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">
+                                <option value="">Semua</option>
+                                <option value="ada_denda" {{ request('pembayaran') == 'ada_denda' ? 'selected' : '' }}>Ada Denda</option>
+                                <option value="menunggu_verifikasi" {{ request('pembayaran') == 'menunggu_verifikasi' ? 'selected' : '' }}>⏳ Menunggu Verifikasi</option>
+                                <option value="terverifikasi" {{ request('pembayaran') == 'terverifikasi' ? 'selected' : '' }}>✓ Sudah Terverifikasi</option>
                             </select>
                         </div>
 
@@ -207,6 +257,7 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Jumlah</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Tanggal Pinjam</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Tanggal Kembali</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Denda</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Aksi</th>
                             </tr>
@@ -225,7 +276,7 @@
                                         <div class="text-sm font-medium text-gray-900">
                                             {{ $item->alat->nama_alat ?? $item->alat->nama ?? 'N/A' }}
                                         </div>
-                                        <div class="text-sm text-gray-500">{{ $item->alat->kategori ?? '-' }}</div>
+                                        <div class="text-sm text-gray-500">{{ $item->alat->kode ?? '-' }}</div>
                                     </td>
                                     <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                                         {{ $item->jumlah }} unit
@@ -234,8 +285,33 @@
                                         {{ $item->tanggal_pinjam ? $item->tanggal_pinjam->format('d M Y') : '-' }}
                                     </td>
                                     <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                                        {{ $item->tanggal_kembali ? $item->tanggal_kembali->format('d M Y') : '-' }}
+                                        {{ $item->tanggal_kembali ? \Carbon\Carbon::parse($item->tanggal_kembali)->format('d M Y') : '-' }}
                                     </td>
+                                    
+                                    <!-- KOLOM DENDA BARU -->
+                                    <td class="px-6 py-4">
+                                        @if($item->denda > 0)
+                                            <div class="text-sm">
+                                                <p class="font-semibold text-red-600">Rp {{ number_format($item->denda, 0, ',', '.') }}</p>
+                                                @if($item->status_pembayaran_denda === 'terverifikasi')
+                                                    <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+                                                        ✓ Terverifikasi
+                                                    </span>
+                                                @elseif($item->status_pembayaran_denda === 'menunggu_verifikasi')
+                                                    <span class="inline-flex items-center rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">
+                                                        ⏳ Verifikasi
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">
+                                                        Belum bayar
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <span class="text-gray-400 text-sm">-</span>
+                                        @endif
+                                    </td>
+                                    
                                     <td class="whitespace-nowrap px-6 py-4">
                                         @switch($item->status)
                                             @case('menunggu')
@@ -252,6 +328,11 @@
                                             @case('dipinjam')
                                                 <span class="inline-flex rounded-full bg-green-100 px-2 py-1 text-xs font-semibold leading-5 text-green-800">
                                                     Dipinjam
+                                                </span>
+                                                @break
+                                            @case('pengajuan_pengembalian')
+                                                <span class="inline-flex rounded-full bg-purple-100 px-2 py-1 text-xs font-semibold leading-5 text-purple-800">
+                                                    Pengajuan
                                                 </span>
                                                 @break
                                             @case('dikembalikan')
@@ -276,7 +357,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="px-6 py-10 text-center">
+                                    <td colspan="9" class="px-6 py-10 text-center">
                                         <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                         </svg>
