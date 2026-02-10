@@ -52,6 +52,9 @@
                             <th class="px-6 py-3 text-left text-sm font-semibold text-gray-800">Nama</th>
                             <th class="px-6 py-3 text-left text-sm font-semibold text-gray-800">Email</th>
                             <th class="px-6 py-3 text-left text-sm font-semibold text-gray-800">Role</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-800">Kelas</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-800">Jurusan</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-800">NISN</th>
                             <th class="px-6 py-3 text-left text-sm font-semibold text-gray-800">Aksi</th>
                         </tr>
                     </thead>
@@ -77,6 +80,9 @@
                                             class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">User</span>
                                     @endif
                                 </td>
+                                <td class="px-6 py-4 text-sm text-gray-600">{{ $user->kelas }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-600">{{ $user->jurusan }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-600">{{ $user->nisn }}</td>
                                 <td class="px-6 py-4 text-sm flex items-center space-x-3">
                                     <button
                                         @click="editUserId = {{ $user->id }}; editUserData = {name: '{{ $user->name }}', email: '{{ $user->email }}', role: '{{ $user->role }}'}; openEdit = true"
@@ -180,6 +186,39 @@
                         </select>
                     </div>
 
+                    <!-- Kelas Field -->
+                    <div>
+                        <label for="kelas" class="block text-sm font-medium text-gray-800 mb-1">Kelas</label>
+                        <input type="text" name="kelas" id="kelas"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('kelas') border-red-500 @enderror"
+                            value="{{ old('kelas') }}" required />
+                        @error('kelas')
+                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Jurusan Field -->
+                    <div>
+                        <label for="jurusan" class="block text-sm font-medium text-gray-800 mb-1">Jurusan</label>
+                        <input type="text" name="jurusan" id="jurusan"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('jurusan') border-red-500 @enderror"
+                            value="{{ old('jurusan') }}" required />
+                        @error('jurusan')
+                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- NISN Field -->
+                    <div>
+                        <label for="nisn" class="block text-sm font-medium text-gray-800 mb-1">NISN</label>
+                        <input type="number" name="nisn" id="nisn"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('nisn') border-red-500 @enderror"
+                            value="{{ old('nisn') }}" required />
+                        @error('nisn')
+                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     <!-- Buttons -->
                     <div class="flex items-center space-x-3 pt-4 border-t border-gray-200">
                         <button type="submit"
@@ -242,6 +281,30 @@
                                 class="block text-sm font-medium text-gray-800 mb-1">Konfirmasi Password</label>
                             <input type="password" name="password_confirmation" id="edit_password_confirmation"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        </div>
+
+                        <!-- Kelas Field -->
+                        <div>
+                            <label for="edit_kelas" class="block text-sm font-medium text-gray-800 mb-1">Kelas</label>
+                            <input type="text" name="kelas" id="edit_kelas"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                :value="editUserData?.kelas || ''" required />
+                        </div>
+
+                        <!-- Jurusan Field -->
+                        <div>
+                            <label for="edit_jurusan" class="block text-sm font-medium text-gray-800 mb-1">Jurusan</label>
+                            <input type="text" name="jurusan" id="edit_jurusan"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                :value="editUserData?.jurusan || ''" required />
+                        </div>
+
+                        <!-- NISN Field -->
+                        <div>
+                            <label for="edit_nisn" class="block text-sm font-medium text-gray-800 mb-1">NISN</label>
+                            <input type="number" name="nisn" id="edit_nisn"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                :value="editUserData?.nisn || ''" required />
                         </div>
 
                         <!-- Buttons -->
@@ -314,10 +377,14 @@
                     const name = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
                     const email = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
                     const role = row.querySelector('td:nth-child(4)')?.textContent.toLowerCase() || '';
+                    const jurusan = row.querySelector('td:nth-child(5)')?.textContent.toLowerCase() || '';
+                    const nisn = row.querySelector('td:nth-child(6)')?.textContent.toLowerCase() || '';
 
                     const matches = name.includes(searchTerm) ||
                         email.includes(searchTerm) ||
-                        role.includes(searchTerm);
+                        role.includes(searchTerm) ||
+                        jurusan.includes(searchTerm) ||
+                        nisn.includes(searchTerm);
 
                     if (matches) {
                         row.style.display = '';
@@ -371,6 +438,9 @@
                                 <div>2. <strong>Email</strong> (email@domain.com)</div>
                                 <div>3. <strong>Password</strong> (minimal 8 karakter)</div>
                                 <div>4. <strong>Role</strong> (user/petugas/admin)</div>
+                                <div>5. <strong>Kelas</strong> (nama kelas)</div>
+                                <div>6. <strong>NISN</strong> (nomor induk siswa nasional)</div>
+                                <div>7. <strong>Jurusan</strong> (nama jurusan)</div>
                             </div>
                         </div>
 
@@ -423,10 +493,8 @@
                         Batal
                     </button>
                     <button id="submitImport" type="submit" form="importForm"
-                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                        @click="importLoading = true" :disabled="!importFile || importLoading">
-                        <span x-show="!importLoading">Upload & Import</span>
-                        <span x-show="importLoading">Sedang diproses...</span>
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                        Upload & Import
                     </button>
                 </div>
             </div>
@@ -439,6 +507,7 @@
             const filePreview = document.getElementById('filePreview');
             const fileName = document.getElementById('fileName');
             const importForm = document.getElementById('importForm');
+            const submitImport = document.getElementById('submitImport');
 
             dropZone.addEventListener('click', () => fileInput.click());
 
@@ -467,21 +536,32 @@
                 if (fileInput.files.length > 0) {
                     fileName.textContent = fileInput.files[0].name;
                     filePreview.style.display = 'block';
-                    document.querySelector('[x-data]').__x.$data.importFile = fileInput.files[0];
+                    submitImport.disabled = false;
                 } else {
                     filePreview.style.display = 'none';
-                    document.querySelector('[x-data]').__x.$data.importFile = null;
+                    submitImport.disabled = true;
                 }
             }
 
             importForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
+                
+                if (!fileInput.files.length) {
+                    alert('Pilih file terlebih dahulu');
+                    return;
+                }
+
                 const formData = new FormData(importForm);
+                submitImport.disabled = true;
+                submitImport.textContent = 'Sedang diproses...';
 
                 try {
                     const response = await fetch('{{ route('admin.users.import') }}', {
                         method: 'POST',
-                        body: formData
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
                     });
 
                     const data = await response.json();
@@ -494,20 +574,22 @@
                         // Tampilkan errors
                         const errorsList = document.getElementById('errorsList');
                         const importErrors = document.getElementById('importErrors');
-
+                        
                         if (data.errors && data.errors.length > 0) {
-                            errorsList.innerHTML = data.errors.map(err =>
+                            errorsList.innerHTML = data.errors.map(err => 
                                 `<div>• ${err}</div>`
                             ).join('');
                             importErrors.style.display = 'block';
                         } else {
                             alert('❌ ' + (data.message || 'Terjadi kesalahan'));
                         }
+                        submitImport.disabled = false;
+                        submitImport.textContent = 'Upload & Import';
                     }
                 } catch (error) {
                     alert('❌ Gagal mengupload file: ' + error.message);
-                } finally {
-                    document.querySelector('[x-data]').__x.$data.importLoading = false;
+                    submitImport.disabled = false;
+                    submitImport.textContent = 'Upload & Import';
                 }
             });
         </script>

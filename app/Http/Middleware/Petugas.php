@@ -9,17 +9,17 @@ use Symfony\Component\HttpFoundation\Response;
 
 class Petugas
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request->user();
+        if (!Auth::check()) {
+            return redirect()->route('login')
+                ->with('error', 'Silakan login terlebih dahulu.');
+        }
 
-        if (! $user || (($user->role ?? '') !== 'petugas')) {
-            return redirect()->route('petugas.login');
+        if (Auth::user()->role !== 'petugas') {
+            Auth::logout();
+            return redirect()->route('login')
+                ->with('error', 'Akses ditolak. Anda tidak memiliki akses ke halaman petugas.');
         }
 
         return $next($request);

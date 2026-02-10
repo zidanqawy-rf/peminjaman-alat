@@ -45,6 +45,24 @@
                             <td class="px-4 py-2">user, petugas, atau admin (opsional, default: user)</td>
                             <td class="px-4 py-2">petugas</td>
                         </tr>
+                        <tr class="border-t">
+                            <td class="px-4 py-2">5</td>
+                            <td class="px-4 py-2 font-medium">Kelas</td>
+                            <td class="px-4 py-2">Kelas user (opsional)</td>
+                            <td class="px-4 py-2">XII RPL 1</td>
+                        </tr>
+                        <tr class="border-t">
+                            <td class="px-4 py-2">6</td>
+                            <td class="px-4 py-2 font-medium">Jurusan</td>
+                            <td class="px-4 py-2">Jurusan user (opsional)</td>
+                            <td class="px-4 py-2">Rekayasa Perangkat Lunak</td>
+                        </tr>
+                        <tr class="border-t">
+                            <td class="px-4 py-2">7</td>
+                            <td class="px-4 py-2 font-medium">NISN</td>
+                            <td class="px-4 py-2">Nomor Induk Siswa Nasional (opsional)</td>
+                            <td class="px-4 py-2">1234567890</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>

@@ -147,7 +147,41 @@
                     <select name="role" id="role"
                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="user">User</option>
+                        <option value="petugas">Petugas</option>
                     </select>
+                </div>
+
+                <!-- Kelas Field -->
+                <div>
+                    <label for="kelas" class="block text-sm font-medium text-gray-800 mb-1">Kelas</label>
+                    <input type="text" name="kelas" id="kelas"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('kelas') border-red-500 @enderror"
+                        value="{{ old('kelas') }}" required />
+                    @error('kelas')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Jurusan Field -->
+                <div>
+                    <label for="jurusan" class="block text-sm font-medium text-gray-800 mb-1">Jurusan</label>
+                    <input type="text" name="jurusan" id="jurusan"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('jurusan') border-red-500 @enderror"
+                        value="{{ old('jurusan') }}" required />
+                    @error('jurusan')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- NISN Field -->
+                <div>
+                    <label for="nisn" class="block text-sm font-medium text-gray-800 mb-1">NISN</label>
+                    <input type="number" name="nisn" id="nisn"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('nisn') border-red-500 @enderror"
+                        value="{{ old('nisn') }}" required />
+                    @error('nisn')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <!-- Buttons -->

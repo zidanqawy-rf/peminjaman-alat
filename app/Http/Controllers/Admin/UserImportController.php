@@ -44,6 +44,9 @@ class UserImportController extends Controller
                 $email = trim($data[1]);
                 $password = trim($data[2]);
                 $role = isset($data[3]) ? trim($data[3]) : 'user';
+                $kelas = isset($data[4]) ? trim($data[4]) : '11 PPLG 1';
+                $jurusan = isset($data[5]) ? trim($data[5]) : 'PPLG';
+                $nisn = isset($data[6]) ? trim($data[6]) : 123456789;
 
                 // Validasi
                 if (empty($name)) {
@@ -69,6 +72,18 @@ class UserImportController extends Controller
                 if (!in_array($role, ['user', 'petugas', 'admin'])) {
                     $role = 'user';
                 }
+    
+                if (empty($kelas)) {
+                    $kelas = '11 PPLG 1';
+                }
+
+                if (empty($jurusan)) {
+                    $jurusan = 'PPLG';
+                }
+
+                if (empty($nisn)) {
+                    $nisn = 123456789;
+                }
 
                 // Cek email sudah ada
                 if (User::where('email', $email)->exists()) {
@@ -83,6 +98,9 @@ class UserImportController extends Controller
                         'email' => $email,
                         'password' => Hash::make($password),
                         'role' => $role,
+                        'kelas' => $kelas,
+                        'jurusan' => $jurusan,
+                        'nisn' => $nisn,
                     ]);
                     $imported++;
                 } catch (\Exception $e) {
@@ -119,12 +137,12 @@ class UserImportController extends Controller
         $handle = fopen('php://memory', 'w');
 
         // Header
-        fputcsv($handle, ['Nama', 'Email', 'Password', 'Role (user/petugas/admin)']);
+        fputcsv($handle, ['Nama', 'Email', 'Password', 'Role (user/petugas/admin)', 'Kelas', 'Jurusan', 'NISN']);
 
         // Sample data
-        fputcsv($handle, ['John Doe', 'john@example.com', 'Password123', 'user']);
-        fputcsv($handle, ['Jane Smith', 'jane@example.com', 'Password123', 'petugas']);
-        fputcsv($handle, ['Admin User', 'admin2@example.com', 'Password123', 'admin']);
+        fputcsv($handle, ['John Doe', 'john@example.com', 'Password123', 'user', '11 PPLG 1', 'PPLG', 123456789]);
+        fputcsv($handle, ['Jane Smith', 'jane@example.com', 'Password123', 'petugas', '11 PPLG 2', 'PPLG', 123456790]);
+        fputcsv($handle, ['Admin User', 'admin2@example.com', 'Password123', 'admin', '11 PPLG 3', 'PPLG', 123456791]);
 
         rewind($handle);
         $csv = stream_get_contents($handle);

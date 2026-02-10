@@ -22,6 +22,10 @@ class AdminUserSeeder extends Seeder
             'email' => 'admin@gmail.com',
             'password' => Hash::make('Admin123'),
             'role' => 'admin',
+            // required by users table
+            'kelas' => '-',
+            'jurusan' => '-',
+            'nisn' => 0,
         ]);
 
         $this->command->info('Admin user (admin@gmail.com) berhasil dibuat!');

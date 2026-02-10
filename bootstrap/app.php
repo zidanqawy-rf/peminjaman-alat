@@ -11,6 +11,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // WAJIB: Daftarkan middleware alias
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\Admin::class,
+            'petugas' => \App\Http\Middleware\Petugas::class,
+        ]);
+
+        // CSRF Exception
         $middleware->validateCsrfTokens(except: [
             'petugas/login',
             'petugas/logout',
