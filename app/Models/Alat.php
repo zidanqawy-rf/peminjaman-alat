@@ -4,68 +4,49 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
 
 class Alat extends Model
 {
     use HasFactory;
 
+    protected $table = 'alats';
+
     protected $fillable = [
+        'kode',
         'nama',
+        'nama_alat',
+        'kategori_id',
         'kategori',
+        'spesifikasi',
         'jumlah',
+        'satuan',
+        'kondisi',
         'status',
+        'lokasi',
         'gambar',
+        'keterangan',
+    ];
+
+    protected $casts = [
+        'jumlah' => 'integer',
     ];
 
     /**
-     * ==========================================
-     * RELATIONSHIPS
-     * ==========================================
+     * Relasi ke Kategori (jika menggunakan tabel kategori)
      */
-    
+    public function kategori()
+    {
+        return $this->belongsTo(Kategori::class, 'kategori_id');
+    }
+
     /**
      * Relasi ke Peminjaman
-     * Satu alat bisa dipinjam berkali-kali
      */
-    public function peminjaman(): HasMany
+    public function peminjaman()
     {
-        return $this->hasMany(Peminjaman::class, 'tool_id', 'id');
+        return $this->hasMany(Peminjaman::class, 'tool_id');
     }
 
-    /**
-     * Get peminjaman yang sedang aktif (dipinjam)
-     */
-    public function peminjamanAktif()
-    {
-        return $this->hasMany(Peminjaman::class, 'tool_id', 'id')
-                    ->whereIn('status', ['disetujui', 'dipinjam', 'pengajuan_pengembalian']);
-    }
-
-    /**
-     * ==========================================
-     * ACCESSORS
-     * ==========================================
-     */
-    
-    /**
-     * Accessor untuk URL gambar
-     */
-    public function getGambarUrlAttribute()
-    {
-        if ($this->gambar) {
-            return Storage::url($this->gambar);
-        }
-        return asset('images/no-image.png'); // default image
-    }
-
-    /**
-     * ==========================================
-     * SCOPES
-     * ==========================================
-     */
-    
     /**
      * Scope untuk alat yang tersedia
      */
@@ -78,73 +59,24 @@ class Alat extends Model
     /**
      * Scope untuk alat berdasarkan kategori
      */
-    public function scopeByKategori($query, $kategori)
+    public function scopeByKategori($query, $kategoriId)
     {
-        return $query->where('kategori', $kategori);
+        return $query->where('kategori_id', $kategoriId);
     }
 
     /**
-     * Scope untuk search alat
+     * Accessor untuk nama alat (support both nama and nama_alat)
      */
-    public function scopeSearch($query, $search)
+    public function getNamaAlatAttribute($value)
     {
-        return $query->where('nama', 'like', "%{$search}%")
-                     ->orWhere('kategori', 'like', "%{$search}%");
+        return $value ?? $this->attributes['nama'] ?? null;
     }
 
     /**
-     * ==========================================
-     * HELPER METHODS
-     * ==========================================
+     * Check apakah alat tersedia
      */
-    
-    /**
-     * Check apakah alat tersedia untuk dipinjam
-     */
-    public function isTersedia(): bool
+    public function isTersedia()
     {
         return $this->status === 'tersedia' && $this->jumlah > 0;
-    }
-
-    /**
-     * Get jumlah alat yang sedang dipinjam
-     */
-    public function getJumlahDipinjamAttribute(): int
-    {
-        return $this->peminjamanAktif()->sum('jumlah');
-    }
-
-    /**
-     * Get jumlah alat yang tersisa (available)
-     */
-    public function getJumlahTersisaAttribute(): int
-    {
-        return $this->jumlah;
-    }
-
-    /**
-     * ==========================================
-     * BOOT METHOD
-     * ==========================================
-     */
-    
-    /**
-     * Hapus gambar lama saat update/delete
-     */
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::updating(function ($alat) {
-            if ($alat->isDirty('gambar') && $alat->getOriginal('gambar')) {
-                Storage::delete($alat->getOriginal('gambar'));
-            }
-        });
-
-        static::deleting(function ($alat) {
-            if ($alat->gambar) {
-                Storage::delete($alat->gambar);
-            }
-        });
     }
 }

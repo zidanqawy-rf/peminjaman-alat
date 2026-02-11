@@ -70,7 +70,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ========================================
     Route::prefix('peminjaman')->name('peminjaman.')->group(function () {
         Route::get('/', [PeminjamanController::class, 'index'])->name('index');
-        Route::get('/buat', [PeminjamanController::class, 'create'])->name('create');
+        Route::get('/create', [PeminjamanController::class, 'create'])->name('create'); // ← UBAH dari '/buat' ke '/create'
         Route::post('/', [PeminjamanController::class, 'store'])->name('store');
         Route::get('/{peminjaman}', [PeminjamanController::class, 'show'])->name('show');
         
@@ -176,6 +176,15 @@ Route::prefix('petugas')->name('petugas.')->group(function () {
             // PETUGAS: Verifikasi pembayaran denda
             Route::patch('/{peminjaman}/verifikasi-pembayaran', [\App\Http\Controllers\Petugas\PeminjamanController::class, 'verifikasiPembayaran'])->name('verifikasi-pembayaran');
             Route::patch('/{peminjaman}/tolak-pembayaran', [\App\Http\Controllers\Petugas\PeminjamanController::class, 'tolakPembayaran'])->name('tolak-pembayaran');
+        });
+
+        // ========================================
+        // LAPORAN
+        // ========================================
+        Route::prefix('laporan')->name('laporan.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Petugas\LaporanController::class, 'index'])->name('index');
+            Route::get('/print', [\App\Http\Controllers\Petugas\LaporanController::class, 'print'])->name('print');
+            Route::get('/export', [\App\Http\Controllers\Petugas\LaporanController::class, 'export'])->name('export');
         });
     });
 });

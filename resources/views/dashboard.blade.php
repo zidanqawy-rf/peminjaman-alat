@@ -124,7 +124,7 @@
             <!-- Alert Denda (jika ada) -->
             @if($adaDenda > 0)
                 @php
-                    $peminjamanDenda = \App\Models\Peminjaman::with(['alat.kategori'])
+                    $peminjamanDenda = \App\Models\Peminjaman::with(['alat'])
                         ->where('user_id', Auth::id())
                         ->where('denda', '>', 0)
                         ->whereIn('status_pembayaran_denda', ['belum_bayar', 'menunggu_verifikasi'])
@@ -228,7 +228,7 @@
 
             <!-- Recent Borrowings (Optional) -->
             @php
-                $recentPeminjaman = \App\Models\Peminjaman::with(['alat.kategori'])
+                $recentPeminjaman = \App\Models\Peminjaman::with(['alat'])
                     ->where('user_id', Auth::id())
                     ->latest()
                     ->limit(5)

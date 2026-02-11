@@ -108,7 +108,7 @@
                         </div>
                         <div>
                             <p class="text-sm text-gray-600">Kategori</p>
-                            <p class="font-semibold">{{ optional($peminjaman->alat->kategori)->nama ?? '-' }}</p>
+                            <p class="font-semibold">{{ $peminjaman->alat->kategori ?? '-' }}</p>
                         </div>
                     </div>
                 @else

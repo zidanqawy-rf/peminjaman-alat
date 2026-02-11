@@ -12,7 +12,6 @@ class PeminjamanController extends Controller
 {
     public function index(Request $request)
     {
-        // FIXED: Hapus .kategori karena kategori adalah kolom string, bukan relasi
         $query = Peminjaman::with(['user', 'alat'])->latest();
 
         if ($request->has('status') && $request->status != '') {
@@ -38,7 +37,7 @@ class PeminjamanController extends Controller
                 })
                 ->orWhereHas('alat', function($alatQuery) use ($search) {
                     $alatQuery->where('nama', 'like', "%{$search}%")
-                              ->orWhere('kategori', 'like', "%{$search}%");
+                              ->orWhere('nama_alat', 'like', "%{$search}%");
                 });
             });
         }
@@ -63,7 +62,7 @@ class PeminjamanController extends Controller
 
     public function show(Peminjaman $peminjaman)
     {
-        // FIXED: Hapus .kategori karena kategori adalah kolom string, bukan relasi
+        // CRITICAL: Load relasi dengan eager loading
         $peminjaman->load(['user', 'alat']);
         
         return view('petugas.peminjaman.show', compact('peminjaman'));
