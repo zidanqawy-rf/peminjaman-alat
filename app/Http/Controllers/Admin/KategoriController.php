@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Kategori;
 use App\Models\Alat;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class KategoriController extends Controller
 {
@@ -14,7 +15,12 @@ class KategoriController extends Controller
      */
     public function index()
     {
-        $kategoris = Kategori::withCount('alats')->orderBy('nama')->get();
+        // Ambil semua kategori dengan count alat secara manual
+        $kategoris = Kategori::orderBy('nama')->get()->map(function ($kategori) {
+            $kategori->alats_count = Alat::where('kategori', $kategori->nama)->count();
+            return $kategori;
+        });
+        
         return view('admin.kategori.index', compact('kategoris'));
     }
 

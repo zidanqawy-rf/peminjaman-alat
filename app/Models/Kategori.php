@@ -19,10 +19,12 @@ class Kategori extends Model
 
     /**
      * Relasi ke Alat
+     * GUNAKAN INI JIKA tabel alats memiliki kolom 'kategori' (string)
+     * yang menyimpan NAMA kategori, bukan ID
      */
     public function alats()
     {
-        return $this->hasMany(Alat::class, 'kategori_id');
+        return $this->hasMany(Alat::class, 'kategori', 'nama');
     }
 
     /**
@@ -30,6 +32,6 @@ class Kategori extends Model
      */
     public function alat()
     {
-        return $this->hasMany(Alat::class, 'kategori_id');
+        return $this->hasMany(Alat::class, 'kategori', 'nama');
     }
 }
