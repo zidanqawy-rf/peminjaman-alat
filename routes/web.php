@@ -134,6 +134,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('alat/template/download', [AlatController::class, 'template'])->name('alat.template');
         Route::post('alat/import', [AlatController::class, 'import'])->name('alat.import');
         Route::resource('alat', AlatController::class);
+
+        // ========================================
+        // LOG AKTIVITAS
+        // ========================================
+        Route::get('log-aktivitas', [\App\Http\Controllers\Admin\LogAktivitasController::class, 'index'])->name('log-aktivitas.index');
     });
 });
 
