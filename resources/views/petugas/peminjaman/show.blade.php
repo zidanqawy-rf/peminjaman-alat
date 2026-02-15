@@ -317,7 +317,7 @@
                             User akan diminta upload bukti pembayaran.
                         </p>
                         <button onclick="document.getElementById('kembalikanDendaModal').classList.remove('hidden')"
-                            class="inline-flex items-center rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700">
+                            class="inline-flex items-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
                             Kembalikan Alat (Status: Di Denda)
                         </button>
                     </div>
