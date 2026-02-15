@@ -40,8 +40,9 @@
                 </div>
             @endif
 
-            <!-- Statistik Cards -->
-            <div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
+            <!-- Statistik Cards (Grid 9 cards) -->
+            <div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-9">
+                <!-- Total -->
                 <div class="overflow-hidden rounded-lg bg-white shadow">
                     <div class="p-5">
                         <div class="flex items-center">
@@ -60,6 +61,7 @@
                     </div>
                 </div>
 
+                <!-- Menunggu -->
                 <div class="overflow-hidden rounded-lg bg-white shadow">
                     <div class="p-5">
                         <div class="flex items-center">
@@ -78,6 +80,7 @@
                     </div>
                 </div>
 
+                <!-- Disetujui -->
                 <div class="overflow-hidden rounded-lg bg-white shadow">
                     <div class="p-5">
                         <div class="flex items-center">
@@ -96,6 +99,7 @@
                     </div>
                 </div>
 
+                <!-- Dipinjam -->
                 <div class="overflow-hidden rounded-lg bg-white shadow">
                     <div class="p-5">
                         <div class="flex items-center">
@@ -114,6 +118,7 @@
                     </div>
                 </div>
 
+                <!-- Pengajuan Pengembalian -->
                 <div class="overflow-hidden rounded-lg bg-white shadow">
                     <div class="p-5">
                         <div class="flex items-center">
@@ -132,6 +137,26 @@
                     </div>
                 </div>
 
+                <!-- Di Denda (BARU) -->
+                <div class="overflow-hidden rounded-lg bg-white shadow border-2 border-red-300">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 rounded-md bg-red-600 p-3">
+                                <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="truncate text-sm font-medium text-gray-500">Di Denda</dt>
+                                    <dd class="text-lg font-semibold text-gray-900">{{ $stats['di_denda'] ?? 0 }}</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dikembalikan -->
                 <div class="overflow-hidden rounded-lg bg-white shadow">
                     <div class="p-5">
                         <div class="flex items-center">
@@ -150,6 +175,7 @@
                     </div>
                 </div>
 
+                <!-- Ditolak -->
                 <div class="overflow-hidden rounded-lg bg-white shadow">
                     <div class="p-5">
                         <div class="flex items-center">
@@ -168,7 +194,7 @@
                     </div>
                 </div>
 
-                <!-- CARD BARU: Statistik Denda -->
+                <!-- Perlu Verifikasi -->
                 <div class="overflow-hidden rounded-lg bg-white shadow border-2 border-orange-300">
                     <div class="p-5">
                         <div class="flex items-center">
@@ -210,6 +236,7 @@
                                 <option value="disetujui" {{ request('status') == 'disetujui' ? 'selected' : '' }}>Disetujui</option>
                                 <option value="dipinjam" {{ request('status') == 'dipinjam' ? 'selected' : '' }}>Dipinjam</option>
                                 <option value="pengajuan_pengembalian" {{ request('status') == 'pengajuan_pengembalian' ? 'selected' : '' }}>Pengajuan Pengembalian</option>
+                                <option value="di_denda" {{ request('status') == 'di_denda' ? 'selected' : '' }}>Di Denda</option>
                                 <option value="dikembalikan" {{ request('status') == 'dikembalikan' ? 'selected' : '' }}>Dikembalikan</option>
                                 <option value="ditolak" {{ request('status') == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
                             </select>
@@ -288,7 +315,7 @@
                                         {{ $item->tanggal_kembali ? \Carbon\Carbon::parse($item->tanggal_kembali)->format('d M Y') : '-' }}
                                     </td>
                                     
-                                    <!-- KOLOM DENDA BARU -->
+                                    <!-- KOLOM DENDA -->
                                     <td class="px-6 py-4">
                                         @if($item->denda > 0)
                                             <div class="text-sm">
@@ -333,6 +360,11 @@
                                             @case('pengajuan_pengembalian')
                                                 <span class="inline-flex rounded-full bg-purple-100 px-2 py-1 text-xs font-semibold leading-5 text-purple-800">
                                                     Pengajuan
+                                                </span>
+                                                @break
+                                            @case('di_denda')
+                                                <span class="inline-flex rounded-full bg-red-100 px-2 py-1 text-xs font-semibold leading-5 text-red-800">
+                                                    Di Denda
                                                 </span>
                                                 @break
                                             @case('dikembalikan')

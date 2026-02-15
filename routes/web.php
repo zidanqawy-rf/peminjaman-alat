@@ -70,7 +70,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ========================================
     Route::prefix('peminjaman')->name('peminjaman.')->group(function () {
         Route::get('/', [PeminjamanController::class, 'index'])->name('index');
-        Route::get('/create', [PeminjamanController::class, 'create'])->name('create'); // ← UBAH dari '/buat' ke '/create'
+        Route::get('/create', [PeminjamanController::class, 'create'])->name('create');
         Route::post('/', [PeminjamanController::class, 'store'])->name('store');
         Route::get('/{peminjaman}', [PeminjamanController::class, 'show'])->name('show');
         
@@ -169,19 +169,33 @@ Route::prefix('petugas')->name('petugas.')->group(function () {
         // KELOLA PEMINJAMAN
         // ========================================
         Route::prefix('peminjaman')->name('peminjaman.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Petugas\PeminjamanController::class, 'index'])->name('index');
-            Route::get('/{peminjaman}', [\App\Http\Controllers\Petugas\PeminjamanController::class, 'show'])->name('show');
-            
-            // Update status peminjaman
-            Route::patch('/{peminjaman}/approve', [\App\Http\Controllers\Petugas\PeminjamanController::class, 'approve'])->name('approve');
-            Route::patch('/{peminjaman}/reject', [\App\Http\Controllers\Petugas\PeminjamanController::class, 'reject'])->name('reject');
-            Route::patch('/{peminjaman}/serahkan', [\App\Http\Controllers\Petugas\PeminjamanController::class, 'serahkan'])->name('serahkan');
-            Route::patch('/{peminjaman}/terima-kembali', [\App\Http\Controllers\Petugas\PeminjamanController::class, 'terimaKembali'])->name('terima-kembali');
-            
-            // PETUGAS: Verifikasi pembayaran denda
-            Route::patch('/{peminjaman}/verifikasi-pembayaran', [\App\Http\Controllers\Petugas\PeminjamanController::class, 'verifikasiPembayaran'])->name('verifikasi-pembayaran');
-            Route::patch('/{peminjaman}/tolak-pembayaran', [\App\Http\Controllers\Petugas\PeminjamanController::class, 'tolakPembayaran'])->name('tolak-pembayaran');
-        });
+        Route::get('/', [\App\Http\Controllers\Petugas\PeminjamanController::class, 'index'])->name('index');
+        Route::get('/{peminjaman}', [\App\Http\Controllers\Petugas\PeminjamanController::class, 'show'])->name('show');
+
+        // Aksi persetujuan
+        Route::patch('/{peminjaman}/approve',       [\App\Http\Controllers\Petugas\PeminjamanController::class, 'approve'])->name('approve');
+        Route::patch('/{peminjaman}/reject',        [\App\Http\Controllers\Petugas\PeminjamanController::class, 'reject'])->name('reject');
+
+        // Serahkan alat
+        Route::patch('/{peminjaman}/serahkan',      [\App\Http\Controllers\Petugas\PeminjamanController::class, 'serahkan'])->name('serahkan');
+
+        // Terima pengembalian normal (dari pengajuan_pengembalian → dikembalikan)
+        Route::patch('/{peminjaman}/terima-kembali', [\App\Http\Controllers\Petugas\PeminjamanController::class, 'terimaKembali'])->name('terima-kembali');
+
+        // Verifikasi / tolak pembayaran denda
+        Route::patch('/{peminjaman}/verifikasi-pembayaran', [\App\Http\Controllers\Petugas\PeminjamanController::class, 'verifikasiPembayaran'])->name('verifikasi-pembayaran');
+        Route::patch('/{peminjaman}/tolak-pembayaran',      [\App\Http\Controllers\Petugas\PeminjamanController::class, 'tolakPembayaran'])->name('tolak-pembayaran');
+
+        // Kembalikan dengan denda dari pengajuan_pengembalian → di_denda
+        Route::patch('/{peminjaman}/kembalikan-denda',      [\App\Http\Controllers\Petugas\PeminjamanController::class, 'kembalikanDenda'])->name('kembalikan-denda');
+
+        // *** ROUTE BARU: Kembalikan paksa dari dipinjam → di_denda ***
+        // Digunakan ketika user belum ajukan pengembalian tapi alat sudah terlambat
+        Route::patch('/{peminjaman}/kembalikan-denda-paksa', [\App\Http\Controllers\Petugas\PeminjamanController::class, 'kembalikanDendaPaksa'])->name('kembalikan-denda-paksa');
+
+        // Selesaikan peminjaman setelah denda lunas: di_denda → dikembalikan
+        Route::patch('/{peminjaman}/selesaikan-denda',      [\App\Http\Controllers\Petugas\PeminjamanController::class, 'selesaikanDenda'])->name('selesaikan-denda');
+    });
 
         // ========================================
         // LAPORAN

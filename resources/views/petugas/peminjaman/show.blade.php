@@ -1,450 +1,616 @@
-<x-app-layout>
+<x-petugas-layout>
+    <x-slot name="title">Detail Peminjaman #{{ $peminjaman->id }}</x-slot>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Detail Peminjaman #{{ $peminjaman->id }}
-            </h2>
-            <a href="{{ route('petugas.peminjaman.index') }}" class="text-sm text-blue-600 hover:text-blue-800">
-                ← Kembali ke Daftar
-            </a>
-        </div>
+        <h2 class="text-xl font-semibold leading-tight text-gray-800">
+            Detail Peminjaman #{{ $peminjaman->id }}
+        </h2>
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+        <div class="mx-auto max-w-5xl sm:px-6 lg:px-8">
             
-            {{-- Alert Messages --}}
-            @if(session('success'))
-                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-                    {{ session('success') }}
+            <!-- Alert Messages -->
+            @if (session('success'))
+                <div class="mb-6 rounded-md border-l-4 border-green-500 bg-green-50 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-green-800">{{ session('success') }}</p>
+                        </div>
+                    </div>
                 </div>
             @endif
 
-            @if(session('error'))
-                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                    {{ session('error') }}
+            @if (session('error'))
+                <div class="mb-6 rounded-md border-l-4 border-red-500 bg-red-50 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-red-800">{{ session('error') }}</p>
+                        </div>
+                    </div>
                 </div>
             @endif
 
-            {{-- Status Badge --}}
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="text-lg font-semibold mb-2">Status Peminjaman</h3>
-                        <span class="px-4 py-2 rounded-full text-sm font-semibold
-                            @if($peminjaman->status === 'menunggu') bg-yellow-200 text-yellow-800
-                            @elseif($peminjaman->status === 'disetujui') bg-blue-200 text-blue-800
-                            @elseif($peminjaman->status === 'dipinjam') bg-green-200 text-green-800
-                            @elseif($peminjaman->status === 'pengajuan_pengembalian') bg-purple-200 text-purple-800
-                            @elseif($peminjaman->status === 'dikembalikan') bg-gray-200 text-gray-800
-                            @elseif($peminjaman->status === 'ditolak') bg-red-200 text-red-800
+            <!-- Informasi Peminjaman -->
+            <div class="mb-6 overflow-hidden bg-white shadow-sm sm:rounded-lg">
+                <div class="p-6">
+                    <div class="mb-6 flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900">Informasi Peminjaman</h3>
+                        
+                        <!-- Status Badge -->
+                        <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold
+                            @if($peminjaman->status === 'menunggu') bg-yellow-100 text-yellow-800
+                            @elseif($peminjaman->status === 'disetujui') bg-blue-100 text-blue-800
+                            @elseif($peminjaman->status === 'dipinjam') bg-purple-100 text-purple-800
+                            @elseif($peminjaman->status === 'pengajuan_pengembalian') bg-orange-100 text-orange-800
+                            @elseif($peminjaman->status === 'di_denda') bg-red-100 text-red-800
+                            @elseif($peminjaman->status === 'dikembalikan') bg-green-100 text-green-800
+                            @elseif($peminjaman->status === 'ditolak') bg-red-100 text-red-800
                             @endif">
                             {{ ucfirst(str_replace('_', ' ', $peminjaman->status)) }}
                         </span>
                     </div>
 
-                    {{-- Informasi Denda --}}
-                    @if($peminjaman->denda > 0)
-                        <div class="text-right">
-                            <p class="text-sm text-gray-600">Total Denda</p>
-                            <p class="text-2xl font-bold text-red-600">Rp {{ number_format($peminjaman->denda, 0, ',', '.') }}</p>
-                            @if($peminjaman->status_pembayaran_denda === 'terverifikasi')
-                                <span class="inline-block mt-2 px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
-                                    ✓ Sudah Terverifikasi
-                                </span>
-                            @elseif($peminjaman->status_pembayaran_denda === 'menunggu_verifikasi')
-                                <span class="inline-block mt-2 px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">
-                                    ⏳ Menunggu Verifikasi
-                                </span>
-                            @else
-                                <span class="inline-block mt-2 px-3 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-full">
-                                    ✗ Belum Dibayar
-                                </span>
+                    <!-- Detail Data -->
+                    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <div class="space-y-4">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Peminjam</p>
+                                <p class="mt-1 text-base text-gray-900">{{ $peminjaman->user->name }}</p>
+                                <p class="text-sm text-gray-500">{{ $peminjaman->user->email }}</p>
+                            </div>
+                            
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Nama Alat</p>
+                                <p class="mt-1 text-base text-gray-900">{{ $peminjaman->alat->nama ?? 'Alat tidak ditemukan' }}</p>
+                            </div>
+                            
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Jumlah</p>
+                                <p class="mt-1 text-base text-gray-900">{{ $peminjaman->jumlah }} unit</p>
+                            </div>
+
+                            @if($peminjaman->keperluan)
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Keperluan</p>
+                                <p class="mt-1 text-base text-gray-900">{{ $peminjaman->keperluan }}</p>
+                            </div>
                             @endif
                         </div>
-                    @endif
-                </div>
-            </div>
 
-            {{-- Data Peminjam --}}
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                <h3 class="text-lg font-semibold mb-4">Informasi Peminjam</h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <p class="text-sm text-gray-600">Nama</p>
-                        <p class="font-semibold">{{ $peminjaman->user->name ?? '-' }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-600">Email</p>
-                        <p class="font-semibold">{{ $peminjaman->user->email ?? '-' }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-600">Nomor HP</p>
-                        <p class="font-semibold">{{ $peminjaman->user->no_hp ?? '-' }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-600">NIM/NIP</p>
-                        <p class="font-semibold">{{ $peminjaman->user->nim_nip ?? '-' }}</p>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Data Alat --}}
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                <h3 class="text-lg font-semibold mb-4">Informasi Alat</h3>
-                @if($peminjaman->alat)
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <p class="text-sm text-gray-600">Nama Alat</p>
-                            <p class="font-semibold">{{ $peminjaman->alat->nama ?? $peminjaman->alat->nama_alat ?? '-' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-600">Kode Alat</p>
-                            <p class="font-semibold">{{ $peminjaman->alat->kode ?? '-' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-600">Jumlah Dipinjam</p>
-                            <p class="font-semibold">{{ $peminjaman->jumlah }} unit</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-600">Kategori</p>
-                            <p class="font-semibold">{{ $peminjaman->alat->kategori ?? '-' }}</p>
-                        </div>
-                    </div>
-                @else
-                    <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4">
-                        <p class="text-yellow-800">⚠️ Data alat tidak tersedia (Alat mungkin sudah dihapus)</p>
-                        <p class="text-sm text-yellow-700 mt-1">Jumlah Dipinjam: {{ $peminjaman->jumlah }} unit</p>
-                    </div>
-                @endif
-            </div>
-
-            {{-- Timeline Peminjaman --}}
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                <h3 class="text-lg font-semibold mb-4">Timeline Peminjaman</h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <p class="text-sm text-gray-600">Tanggal Pengajuan</p>
-                        <p class="font-semibold">{{ $peminjaman->created_at->format('d M Y, H:i') }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-600">Tanggal Pinjam</p>
-                        <p class="font-semibold">{{ $peminjaman->tanggal_pinjam ? $peminjaman->tanggal_pinjam->format('d M Y, H:i') : '-' }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-600">Tanggal Rencana Kembali</p>
-                        <p class="font-semibold">{{ \Carbon\Carbon::parse($peminjaman->tanggal_kembali)->format('d M Y') }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-600">Tanggal Kembali Aktual</p>
-                        <p class="font-semibold">{{ $peminjaman->tanggal_kembali_actual ? $peminjaman->tanggal_kembali_actual->format('d M Y, H:i') : '-' }}</p>
-                    </div>
-                </div>
-
-                {{-- INFO KETERLAMBATAN & DENDA --}}
-                @if($peminjaman->jumlah_hari_terlambat > 0 || $peminjaman->denda > 0)
-                    <div class="mt-4 p-4 bg-red-50 border-2 border-red-300 rounded-lg">
-                        <div class="flex items-center justify-between">
+                        <div class="space-y-4">
                             <div>
-                                <p class="text-red-800 font-semibold text-lg">
-                                    ⚠️ Terlambat {{ $peminjaman->jumlah_hari_terlambat ?? $peminjaman->hari_terlambat }} hari
-                                </p>
-                                <p class="text-sm text-red-600 mt-1">
-                                    Tanggal Rencana: {{ \Carbon\Carbon::parse($peminjaman->tanggal_kembali)->format('d M Y') }} | 
-                                    Tanggal Aktual: {{ $peminjaman->tanggal_kembali_actual ? $peminjaman->tanggal_kembali_actual->format('d M Y') : '-' }}
+                                <p class="text-sm font-medium text-gray-500">Tanggal Pinjam</p>
+                                <p class="mt-1 text-base text-gray-900">
+                                    {{ $peminjaman->tanggal_pinjam ? \Carbon\Carbon::parse($peminjaman->tanggal_pinjam)->format('d F Y') : '-' }}
                                 </p>
                             </div>
-                            <div class="text-right">
-                                <p class="text-sm text-red-600">Total Denda</p>
-                                <p class="text-2xl font-bold text-red-700">Rp {{ number_format($peminjaman->denda, 0, ',', '.') }}</p>
+                            
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Tanggal Rencana Kembali</p>
+                                <p class="mt-1 text-base text-gray-900">
+                                    {{ $peminjaman->tanggal_kembali ? \Carbon\Carbon::parse($peminjaman->tanggal_kembali)->format('d F Y') : '-' }}
+                                </p>
                             </div>
-                        </div>
-                    </div>
-                @endif
-            </div>
-
-            {{-- Keperluan --}}
-            @if($peminjaman->keperluan || $peminjaman->catatan)
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                    <h3 class="text-lg font-semibold mb-2">Keperluan</h3>
-                    <p class="text-gray-700">{{ $peminjaman->keperluan ?? $peminjaman->catatan ?? '-' }}</p>
-                </div>
-            @endif
-
-            {{-- SECTION: VERIFIKASI PEMBAYARAN DENDA --}}
-            @if($peminjaman->denda > 0 && $peminjaman->bukti_pembayaran_denda)
-                <div class="bg-yellow-50 border-2 border-yellow-300 overflow-hidden shadow-sm sm:rounded-lg p-6">
-                    <h3 class="text-lg font-semibold mb-4 text-yellow-800">💰 Verifikasi Pembayaran Denda</h3>
-                    
-                    <div class="grid md:grid-cols-2 gap-6">
-                        {{-- Kiri: Info Pembayaran --}}
-                        <div>
-                            <div class="bg-white p-4 rounded-lg shadow-sm space-y-3">
-                                <div>
-                                    <p class="text-sm text-gray-600">Total Denda</p>
-                                    <p class="text-2xl font-bold text-red-600">Rp {{ number_format($peminjaman->denda, 0, ',', '.') }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm text-gray-600">Status Pembayaran</p>
-                                    <p class="font-semibold">
-                                        @if($peminjaman->status_pembayaran_denda === 'terverifikasi')
-                                            <span class="text-green-600">✓ Terverifikasi</span>
-                                        @elseif($peminjaman->status_pembayaran_denda === 'menunggu_verifikasi')
-                                            <span class="text-yellow-600">⏳ Menunggu Verifikasi</span>
-                                        @else
-                                            <span class="text-red-600">✗ Belum Bayar</span>
-                                        @endif
-                                    </p>
-                                </div>
-                                <div>
-                                    <p class="text-sm text-gray-600">Waktu Upload Bukti</p>
-                                    <p class="font-semibold">{{ $peminjaman->updated_at->format('d M Y, H:i') }}</p>
-                                </div>
-
-                                @if($peminjaman->catatan_admin_pembayaran)
-                                    <div class="mt-4 p-3 bg-red-50 border border-red-200 rounded">
-                                        <p class="text-sm font-semibold text-red-800 mb-1">Catatan Penolakan:</p>
-                                        <p class="text-sm text-red-700">{{ $peminjaman->catatan_admin_pembayaran }}</p>
-                                    </div>
+                            
+                            @if($peminjaman->tanggal_kembali_actual)
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Tanggal Kembali Aktual</p>
+                                <p class="mt-1 text-base text-gray-900">
+                                    {{ \Carbon\Carbon::parse($peminjaman->tanggal_kembali_actual)->format('d F Y') }}
+                                </p>
+                                
+                                @php
+                                    $tanggalRencana = \Carbon\Carbon::parse($peminjaman->tanggal_kembali)->startOfDay();
+                                    $tanggalActual = \Carbon\Carbon::parse($peminjaman->tanggal_kembali_actual)->startOfDay();
+                                    $isLateActual = $tanggalActual->gt($tanggalRencana);
+                                @endphp
+                                
+                                @if($isLateActual)
+                                    <span class="mt-1 inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
+                                        Terlambat {{ $peminjaman->jumlah_hari_terlambat }} hari
+                                    </span>
+                                @else
+                                    <span class="mt-1 inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                                        Tepat Waktu
+                                    </span>
                                 @endif
                             </div>
-                        </div>
+                            @endif
 
-                        {{-- Kanan: Bukti Pembayaran --}}
-                        <div>
-                            <p class="text-sm font-semibold text-gray-700 mb-2">Bukti Pembayaran:</p>
-                            <div class="bg-white p-2 rounded-lg shadow-sm">
-                                <img src="{{ asset('storage/' . $peminjaman->bukti_pembayaran_denda) }}" 
-                                     alt="Bukti Pembayaran" 
-                                     class="w-full h-auto max-h-96 object-contain rounded cursor-pointer hover:opacity-90"
-                                     onclick="window.open(this.src, '_blank')">
-                                <p class="text-xs text-gray-500 text-center mt-2">Klik gambar untuk memperbesar</p>
+                            @if($peminjaman->denda > 0)
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Denda</p>
+                                <p class="mt-1 text-base font-semibold text-red-600">
+                                    Rp {{ number_format($peminjaman->denda, 0, ',', '.') }}
+                                </p>
+                                @if($peminjaman->status_pembayaran_denda === 'terverifikasi')
+                                    <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">Terverifikasi</span>
+                                @elseif($peminjaman->status_pembayaran_denda === 'menunggu_verifikasi')
+                                    <span class="inline-flex items-center rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">Menunggu Verifikasi</span>
+                                @else
+                                    <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">Belum Bayar</span>
+                                @endif
                             </div>
+                            @endif
                         </div>
                     </div>
 
-                    {{-- Tombol Aksi Verifikasi --}}
-                    @if($peminjaman->status_pembayaran_denda === 'menunggu_verifikasi')
-                        <div class="mt-6 flex gap-3">
-                            {{-- Form Verifikasi --}}
-                            <form action="{{ route('petugas.peminjaman.verifikasi-pembayaran', $peminjaman) }}" 
-                                  method="POST" 
-                                  class="flex-1"
-                                  onsubmit="return confirm('Apakah Anda yakin pembayaran ini sudah benar dan ingin diverifikasi?')">
-                                @csrf
-                                @method('PATCH')
-                                <button type="submit" 
-                                        class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition">
-                                    ✓ Verifikasi Pembayaran
-                                </button>
-                            </form>
+                    <!-- Foto Pengembalian -->
+                    @if($peminjaman->foto_pengembalian)
+                    <div class="mt-6 border-t pt-6">
+                        <p class="text-sm font-medium text-gray-500 mb-3">Foto Pengembalian</p>
+                        <img src="{{ asset('storage/' . $peminjaman->foto_pengembalian) }}" 
+                             alt="Foto Pengembalian" 
+                             class="max-w-md rounded-lg border shadow-sm">
+                    </div>
+                    @endif
 
-                            {{-- Form Tolak --}}
-                            <button type="button" 
-                                    onclick="document.getElementById('modal-tolak-pembayaran').classList.remove('hidden')"
-                                    class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg transition">
-                                ✗ Tolak Pembayaran
-                            </button>
-                        </div>
-                    @elseif($peminjaman->status_pembayaran_denda === 'terverifikasi')
-                        <div class="mt-6 p-4 bg-green-100 border border-green-300 rounded-lg text-center">
-                            <p class="text-green-800 font-semibold">✓ Pembayaran sudah terverifikasi</p>
-                        </div>
+                    <!-- Bukti Pembayaran Denda -->
+                    @if($peminjaman->bukti_pembayaran_denda)
+                    <div class="mt-6 border-t pt-6">
+                        <p class="text-sm font-medium text-gray-500 mb-3">Bukti Pembayaran Denda</p>
+                        <img src="{{ asset('storage/' . $peminjaman->bukti_pembayaran_denda) }}" 
+                             alt="Bukti Pembayaran" 
+                             class="max-w-md rounded-lg border shadow-sm">
+                        @if($peminjaman->status_pembayaran_denda === 'menunggu_verifikasi')
+                        <p class="mt-2 text-sm text-yellow-600">Menunggu verifikasi</p>
+                        @elseif($peminjaman->status_pembayaran_denda === 'terverifikasi')
+                        <p class="mt-2 text-sm text-green-600">Sudah diverifikasi</p>
+                        @endif
+                    </div>
                     @endif
                 </div>
-            @endif
+            </div>
 
-            {{-- Foto Pengembalian --}}
-            @if($peminjaman->foto_pengembalian)
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                    <h3 class="text-lg font-semibold mb-4">Foto Pengembalian (dari User)</h3>
-                    <img src="{{ asset('storage/' . $peminjaman->foto_pengembalian) }}" 
-                         alt="Foto Pengembalian" 
-                         class="max-w-md rounded shadow cursor-pointer hover:opacity-90"
-                         onclick="window.open(this.src, '_blank')">
-                    <p class="text-xs text-gray-500 mt-2">Klik untuk memperbesar</p>
-                </div>
-            @endif
-
-            {{-- Kondisi & Catatan Petugas --}}
-            @if($peminjaman->status === 'dikembalikan')
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                    <h3 class="text-lg font-semibold mb-4">Hasil Verifikasi Pengembalian</h3>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <p class="text-sm text-gray-600">Kondisi Alat</p>
-                            <p class="font-semibold capitalize">{{ $peminjaman->kondisi_alat ?? '-' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-600">Catatan Petugas</p>
-                            <p class="font-semibold">{{ $peminjaman->catatan_petugas ?? '-' }}</p>
-                        </div>
-                    </div>
-                </div>
-            @endif
-
-            {{-- Alasan Penolakan --}}
-            @if($peminjaman->status === 'ditolak' && $peminjaman->alasan_penolakan)
-                <div class="bg-red-50 border border-red-200 overflow-hidden shadow-sm sm:rounded-lg p-6">
-                    <h3 class="text-lg font-semibold mb-2 text-red-800">Alasan Penolakan</h3>
-                    <p class="text-red-700">{{ $peminjaman->alasan_penolakan }}</p>
-                </div>
-            @endif
-
-            {{-- TOMBOL AKSI PETUGAS --}}
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                <h3 class="text-lg font-semibold mb-4">Aksi Petugas</h3>
-                
-                <div class="flex gap-3 flex-wrap">
-                    {{-- Approve --}}
-                    @if($peminjaman->status === 'menunggu')
-                        <form action="{{ route('petugas.peminjaman.approve', $peminjaman) }}" method="POST" class="inline">
+            <!-- ============================================================ -->
+            <!-- ACTION: APPROVE/REJECT (Status: Menunggu) -->
+            <!-- ============================================================ -->
+            @if($peminjaman->status === 'menunggu')
+            <div class="mb-6 overflow-hidden bg-white shadow-sm sm:rounded-lg">
+                <div class="p-6">
+                    <h4 class="mb-4 text-md font-semibold text-gray-900">Tindakan Persetujuan</h4>
+                    <div class="flex space-x-3">
+                        <form action="{{ route('petugas.peminjaman.approve', $peminjaman) }}" method="POST">
                             @csrf
                             @method('PATCH')
                             <button type="submit" 
-                                    class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded"
-                                    onclick="return confirm('Setujui peminjaman ini?')">
+                                class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
                                 Setujui Peminjaman
                             </button>
                         </form>
-
-                        <button type="button" 
-                                onclick="document.getElementById('modal-tolak').classList.remove('hidden')"
-                                class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded">
+                        
+                        <button onclick="document.getElementById('rejectModal').classList.remove('hidden')"
+                            class="inline-flex items-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
                             Tolak Peminjaman
                         </button>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            <!-- ============================================================ -->
+            <!-- ACTION: SERAHKAN ALAT (Status: Disetujui) -->
+            <!-- ============================================================ -->
+            @if($peminjaman->status === 'disetujui')
+            <div class="mb-6 overflow-hidden bg-white shadow-sm sm:rounded-lg">
+                <div class="p-6">
+                    <h4 class="mb-4 text-md font-semibold text-gray-900">Serahkan Alat</h4>
+                    <p class="mb-4 text-sm text-gray-600">Klik tombol di bawah setelah alat diserahkan kepada peminjam.</p>
+                    <form action="{{ route('petugas.peminjaman.serahkan', $peminjaman) }}" method="POST">
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" 
+                            class="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700">
+                            Konfirmasi Penyerahan Alat
+                        </button>
+                    </form>
+                </div>
+            </div>
+            @endif
+
+            <!-- ============================================================ -->
+            <!-- ACTION: STATUS DIPINJAM - Petugas Inisiasi Pengembalian Paksa -->
+            <!-- Digunakan jika user terlambat dan petugas ingin langsung -->
+            <!-- memproses pengembalian tanpa menunggu user ajukan pengembalian -->
+            <!-- ============================================================ -->
+            @if($peminjaman->status === 'dipinjam')
+            @php
+                $tanggalRencana = \Carbon\Carbon::parse($peminjaman->tanggal_kembali)->startOfDay();
+                $tanggalHariIni = \Carbon\Carbon::now()->startOfDay();
+                $hariTerlambat  = $tanggalHariIni->gt($tanggalRencana) ? $tanggalRencana->diffInDays($tanggalHariIni) : 0;
+                $isTerlambat    = $hariTerlambat > 0;
+                $dendaPerHari   = 5000;
+                $estimasiDenda  = $hariTerlambat * $dendaPerHari;
+            @endphp
+
+            @if($isTerlambat)
+            <div class="mb-6 overflow-hidden bg-white shadow-sm sm:rounded-lg">
+                <div class="p-6">
+                    <!-- Warning Terlambat -->
+                    <div class="mb-4 rounded-md bg-red-50 border-l-4 border-red-500 p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-red-800">TANGGAL TIDAK SESUAI - Pengembalian Terlambat!</h3>
+                                <div class="mt-2 text-sm text-red-700">
+                                    <p>Tanggal Rencana: <strong>{{ $tanggalRencana->format('d M Y') }}</strong></p>
+                                    <p>Tanggal Hari Ini: <strong>{{ $tanggalHariIni->format('d M Y') }}</strong></p>
+                                    <p class="mt-1">Terlambat <strong>{{ $hariTerlambat }} hari</strong></p>
+                                    <p class="mt-1">Estimasi denda: <strong>Rp {{ number_format($estimasiDenda, 0, ',', '.') }}</strong></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Opsi: Petugas Inisiasi Pengembalian Langsung dengan Denda -->
+                    <div class="rounded-md bg-orange-50 border-l-4 border-orange-500 p-4">
+                        <h4 class="text-sm font-medium text-orange-800 mb-2">
+                            Opsi: Proses Pengembalian Langsung (Tanpa Menunggu User)
+                        </h4>
+                        <p class="text-sm text-orange-700 mb-3">
+                            Gunakan ini jika alat sudah ada di tangan Anda. Alat akan dikembalikan ke stok dan status berubah menjadi 
+                            <strong>"Di Denda"</strong> agar user bisa upload bukti pembayaran.
+                        </p>
+                        <button onclick="document.getElementById('kembalikanDendaDariDipinjamModal').classList.remove('hidden')"
+                            class="inline-flex items-center rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700">
+                            Kembalikan Alat &amp; Set Status "Di Denda"
+                        </button>
+                    </div>
+                </div>
+            </div>
+            @endif
+            @endif
+
+            <!-- ============================================================ -->
+            <!-- ACTION: VERIFIKASI PENGEMBALIAN (Status: Pengajuan Pengembalian) -->
+            <!-- ============================================================ -->
+            @if($peminjaman->status === 'pengajuan_pengembalian')
+            <div class="mb-6 overflow-hidden bg-white shadow-sm sm:rounded-lg">
+                <div class="p-6">
+                    <h4 class="mb-4 text-md font-semibold text-gray-900">Verifikasi Pengembalian</h4>
+                    
+                    @php
+                        $tanggalRencana2 = \Carbon\Carbon::parse($peminjaman->tanggal_kembali)->startOfDay();
+                        $tanggalActual2  = \Carbon\Carbon::parse($peminjaman->tanggal_kembali_actual)->startOfDay();
+                        $isLate2         = $tanggalActual2->gt($tanggalRencana2);
+                        $hariTerlambat2  = $isLate2 ? $tanggalRencana2->diffInDays($tanggalActual2) : 0;
+                    @endphp
+
+                    @if($isLate2)
+                    <div class="mb-4 rounded-md bg-red-50 border-l-4 border-red-500 p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-red-800">TANGGAL TIDAK SESUAI - Pengembalian Terlambat!</h3>
+                                <div class="mt-2 text-sm text-red-700">
+                                    <p>Tanggal Rencana: <strong>{{ $tanggalRencana2->format('d M Y') }}</strong></p>
+                                    <p>Tanggal Aktual: <strong>{{ $tanggalActual2->format('d M Y') }}</strong></p>
+                                    <p class="mt-1">Terlambat <strong>{{ $hariTerlambat2 }} hari</strong></p>
+                                    <p class="mt-1">Denda: <strong class="text-lg">Rp {{ number_format($peminjaman->denda, 0, ',', '.') }}</strong></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tombol Kembalikan dengan Status Di Denda -->
+                    <div class="mb-4 rounded-md bg-orange-50 border-l-4 border-orange-500 p-4">
+                        <p class="text-sm font-medium text-orange-800 mb-3">
+                            <strong>Opsi Kembalikan:</strong> Kembalikan alat ke stok sekarang dan ubah status menjadi "Di Denda".
+                            User akan diminta upload bukti pembayaran.
+                        </p>
+                        <button onclick="document.getElementById('kembalikanDendaModal').classList.remove('hidden')"
+                            class="inline-flex items-center rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700">
+                            Kembalikan Alat (Status: Di Denda)
+                        </button>
+                    </div>
+                    @else
+                    <div class="mb-4 rounded-md bg-green-50 border-l-4 border-green-500 p-4">
+                        <h3 class="text-sm font-medium text-green-800">TANGGAL SESUAI - Pengembalian Tepat Waktu</h3>
+                        <p class="mt-1 text-sm text-green-700">Tidak ada denda</p>
+                    </div>
                     @endif
 
-                    {{-- Serahkan Alat --}}
-                    @if($peminjaman->status === 'disetujui')
-                        <form action="{{ route('petugas.peminjaman.serahkan', $peminjaman) }}" method="POST" class="inline">
+                    <!-- Form Verifikasi Normal -->
+                    @if($peminjaman->denda > 0)
+                        @if($peminjaman->status_pembayaran_denda === 'terverifikasi')
+                            <form action="{{ route('petugas.peminjaman.terima-kembali', $peminjaman) }}" method="POST" class="space-y-4">
+                                @csrf
+                                @method('PATCH')
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Kondisi Alat <span class="text-red-500">*</span></label>
+                                    <select name="kondisi_alat" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                        <option value="">Pilih Kondisi</option>
+                                        <option value="baik">Baik</option>
+                                        <option value="rusak">Rusak</option>
+                                        <option value="hilang">Hilang</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Catatan Petugas</label>
+                                    <textarea name="catatan_petugas" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Catatan tambahan..."></textarea>
+                                </div>
+                                <button type="submit" class="w-full rounded-md bg-green-600 px-4 py-3 text-sm font-medium text-white hover:bg-green-700">
+                                    Terima Pengembalian (Denda Sudah Terverifikasi)
+                                </button>
+                            </form>
+                        @elseif($peminjaman->status_pembayaran_denda === 'menunggu_verifikasi')
+                            <div class="mb-4 rounded-md bg-yellow-50 border-l-4 border-yellow-500 p-4">
+                                <p class="text-sm font-medium text-yellow-800">Peminjam sudah upload bukti pembayaran. Silakan verifikasi.</p>
+                            </div>
+                            <div class="flex space-x-3">
+                                <form action="{{ route('petugas.peminjaman.verifikasi-pembayaran', $peminjaman) }}" method="POST" class="flex-1">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="w-full rounded-md bg-green-600 px-4 py-3 text-sm font-medium text-white hover:bg-green-700">
+                                        Verifikasi Pembayaran Denda
+                                    </button>
+                                </form>
+                                <button onclick="document.getElementById('tolakPembayaranModal').classList.remove('hidden')"
+                                    class="flex-1 rounded-md bg-red-600 px-4 py-3 text-sm font-medium text-white hover:bg-red-700">
+                                    Tolak Pembayaran
+                                </button>
+                            </div>
+                        @else
+                            <div class="rounded-md bg-red-50 border-l-4 border-red-500 p-4">
+                                <p class="text-sm font-medium text-red-800">Peminjam belum upload bukti pembayaran denda. Gunakan tombol "Kembalikan Alat (Status: Di Denda)" di atas agar user bisa upload bukti.</p>
+                            </div>
+                        @endif
+                    @else
+                        <form action="{{ route('petugas.peminjaman.terima-kembali', $peminjaman) }}" method="POST" class="space-y-4">
                             @csrf
                             @method('PATCH')
-                            <button type="submit" 
-                                    class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded"
-                                    onclick="return confirm('Alat sudah diserahkan ke peminjam?')">
-                                Serahkan Alat
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Kondisi Alat <span class="text-red-500">*</span></label>
+                                <select name="kondisi_alat" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <option value="">Pilih Kondisi</option>
+                                    <option value="baik">Baik</option>
+                                    <option value="rusak">Rusak</option>
+                                    <option value="hilang">Hilang</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Catatan Petugas</label>
+                                <textarea name="catatan_petugas" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Catatan tambahan..."></textarea>
+                            </div>
+                            <button type="submit" class="w-full rounded-md bg-green-600 px-4 py-3 text-sm font-medium text-white hover:bg-green-700">
+                                Terima Pengembalian
                             </button>
                         </form>
                     @endif
+                </div>
+            </div>
+            @endif
 
-                    {{-- Terima Pengembalian --}}
-                    @if($peminjaman->status === 'pengajuan_pengembalian')
-                        <button type="button" 
-                                onclick="document.getElementById('modal-terima-kembali').classList.remove('hidden')"
-                                class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded">
-                            Terima Pengembalian
-                        </button>
+            <!-- ============================================================ -->
+            <!-- ACTION: STATUS DI DENDA -->
+            <!-- ============================================================ -->
+            @if($peminjaman->status === 'di_denda')
+            <div class="mb-6 overflow-hidden bg-white shadow-sm sm:rounded-lg">
+                <div class="p-6">
+                    <h4 class="mb-4 text-md font-semibold text-gray-900">Status: Di Denda</h4>
+                    <div class="mb-4 rounded-md bg-orange-50 border-l-4 border-orange-500 p-4">
+                        <p class="text-sm text-orange-800">
+                            Alat sudah dikembalikan ke stok. Menunggu user membayar denda sebesar 
+                            <strong>Rp {{ number_format($peminjaman->denda, 0, ',', '.') }}</strong>
+                        </p>
+                    </div>
+                    
+                    @if($peminjaman->status_pembayaran_denda === 'menunggu_verifikasi')
+                        <div class="mb-4 rounded-md bg-yellow-50 border-l-4 border-yellow-500 p-4">
+                            <p class="text-sm font-medium text-yellow-800">Peminjam sudah upload bukti pembayaran. Silakan verifikasi untuk menyelesaikan peminjaman.</p>
+                        </div>
+                        <div class="flex space-x-3">
+                            <form action="{{ route('petugas.peminjaman.verifikasi-pembayaran', $peminjaman) }}" method="POST" class="flex-1">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" class="w-full rounded-md bg-green-600 px-4 py-3 text-sm font-medium text-white hover:bg-green-700">
+                                    Verifikasi Pembayaran Denda
+                                </button>
+                            </form>
+                            <button onclick="document.getElementById('tolakPembayaranModal').classList.remove('hidden')"
+                                class="flex-1 rounded-md bg-red-600 px-4 py-3 text-sm font-medium text-white hover:bg-red-700">
+                                Tolak Pembayaran
+                            </button>
+                        </div>
+                    @elseif($peminjaman->status_pembayaran_denda === 'terverifikasi')
+                        <div class="mb-4 rounded-md bg-green-50 border-l-4 border-green-500 p-4">
+                            <p class="text-sm font-medium text-green-800">Pembayaran denda sudah diverifikasi. Klik tombol di bawah untuk menyelesaikan peminjaman.</p>
+                        </div>
+                        <form action="{{ route('petugas.peminjaman.selesaikan-denda', $peminjaman) }}" method="POST">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" class="w-full rounded-md bg-green-600 px-4 py-3 text-sm font-medium text-white hover:bg-green-700">
+                                Selesaikan Peminjaman (Ubah Status: Dikembalikan)
+                            </button>
+                        </form>
+                    @else
+                        <div class="rounded-md bg-gray-50 border-l-4 border-gray-400 p-4">
+                            <p class="text-sm text-gray-600">Menunggu user upload bukti pembayaran denda...</p>
+                        </div>
                     @endif
                 </div>
             </div>
+            @endif
 
+            <!-- Tombol Kembali -->
+            <div class="flex justify-between">
+                <a href="{{ route('petugas.peminjaman.index') }}" 
+                    class="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    &larr; Kembali
+                </a>
+            </div>
         </div>
     </div>
 
-    {{-- MODAL: Tolak Peminjaman --}}
-    <div id="modal-tolak" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <h3 class="text-lg font-semibold mb-4">Tolak Peminjaman</h3>
-            <form action="{{ route('petugas.peminjaman.reject', $peminjaman) }}" method="POST">
-                @csrf
-                @method('PATCH')
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Alasan Penolakan</label>
-                    <textarea name="alasan_penolakan" 
-                              rows="4" 
-                              required
-                              class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-                              placeholder="Jelaskan alasan penolakan..."></textarea>
-                </div>
-                <div class="flex gap-2">
-                    <button type="submit" 
-                            class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded">
-                        Tolak
-                    </button>
-                    <button type="button" 
-                            onclick="document.getElementById('modal-tolak').classList.add('hidden')"
-                            class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded">
-                        Batal
-                    </button>
-                </div>
-            </form>
+    <!-- ============================================================ -->
+    <!-- MODAL: Reject Peminjaman -->
+    <!-- ============================================================ -->
+    <div id="rejectModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex min-h-screen items-center justify-center px-4">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
+            <div class="relative z-10 w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+                <h3 class="mb-4 text-lg font-medium text-gray-900">Tolak Peminjaman</h3>
+                <form action="{{ route('petugas.peminjaman.reject', $peminjaman) }}" method="POST">
+                    @csrf
+                    @method('PATCH')
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700">Alasan Penolakan <span class="text-red-500">*</span></label>
+                        <textarea name="alasan_penolakan" rows="4" required
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                            placeholder="Tuliskan alasan penolakan..."></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="document.getElementById('rejectModal').classList.add('hidden')"
+                            class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Batal</button>
+                        <button type="submit" class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">Tolak</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
-    {{-- MODAL: Tolak Pembayaran Denda --}}
-    <div id="modal-tolak-pembayaran" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <h3 class="text-lg font-semibold mb-4">Tolak Pembayaran Denda</h3>
-            <form action="{{ route('petugas.peminjaman.tolak-pembayaran', $peminjaman) }}" method="POST">
-                @csrf
-                @method('PATCH')
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Alasan Penolakan</label>
-                    <textarea name="catatan_petugas" 
-                              rows="4" 
-                              required
-                              class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-                              placeholder="Contoh: Bukti pembayaran tidak jelas, nominal tidak sesuai, dll..."></textarea>
-                    @error('catatan_petugas')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-                <div class="flex gap-2">
-                    <button type="submit" 
-                            class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded">
-                        Tolak Pembayaran
-                    </button>
-                    <button type="button" 
-                            onclick="document.getElementById('modal-tolak-pembayaran').classList.add('hidden')"
-                            class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded">
-                        Batal
-                    </button>
-                </div>
-            </form>
+    <!-- ============================================================ -->
+    <!-- MODAL: Tolak Pembayaran -->
+    <!-- ============================================================ -->
+    <div id="tolakPembayaranModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex min-h-screen items-center justify-center px-4">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
+            <div class="relative z-10 w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+                <h3 class="mb-4 text-lg font-medium text-gray-900">Tolak Pembayaran Denda</h3>
+                <form action="{{ route('petugas.peminjaman.tolak-pembayaran', $peminjaman) }}" method="POST">
+                    @csrf
+                    @method('PATCH')
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700">Alasan Penolakan <span class="text-red-500">*</span></label>
+                        <textarea name="catatan_petugas" rows="4" required
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                            placeholder="Contoh: Bukti tidak jelas, jumlah tidak sesuai..."></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="document.getElementById('tolakPembayaranModal').classList.add('hidden')"
+                            class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Batal</button>
+                        <button type="submit" class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">Tolak</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
-    {{-- MODAL: Terima Pengembalian --}}
-    <div id="modal-terima-kembali" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <h3 class="text-lg font-semibold mb-4">Verifikasi Pengembalian</h3>
-            <form action="{{ route('petugas.peminjaman.terima-kembali', $peminjaman) }}" method="POST">
-                @csrf
-                @method('PATCH')
-                
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Kondisi Alat *</label>
-                    <select name="kondisi_alat" 
-                            required
-                            class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
-                        <option value="">-- Pilih Kondisi --</option>
-                        <option value="baik">Baik</option>
-                        <option value="rusak">Rusak</option>
-                        <option value="hilang">Hilang</option>
-                    </select>
+    <!-- ============================================================ -->
+    <!-- MODAL: Kembalikan dengan Denda (dari status: pengajuan_pengembalian) -->
+    <!-- ============================================================ -->
+    <div id="kembalikanDendaModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex min-h-screen items-center justify-center px-4">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
+            <div class="relative z-10 w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+                <h3 class="mb-4 text-lg font-medium text-gray-900">Kembalikan Alat &ndash; Status "Di Denda"</h3>
+                <div class="mb-4 rounded-md bg-orange-50 p-4">
+                    <p class="text-sm text-orange-800">
+                        Alat akan dikembalikan ke stok dan status berubah menjadi <strong>"Di Denda"</strong>. 
+                        User masih perlu membayar denda <strong>Rp {{ number_format($peminjaman->denda ?? 0, 0, ',', '.') }}</strong>.
+                    </p>
                 </div>
-
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Petugas</label>
-                    <textarea name="catatan_petugas" 
-                              rows="3" 
-                              class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-                              placeholder="Tambahkan catatan jika diperlukan..."></textarea>
-                </div>
-
-                <div class="flex gap-2">
-                    <button type="submit" 
-                            class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded">
-                        Terima Pengembalian
-                    </button>
-                    <button type="button" 
-                            onclick="document.getElementById('modal-terima-kembali').classList.add('hidden')"
-                            class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded">
-                        Batal
-                    </button>
-                </div>
-            </form>
+                <form action="{{ route('petugas.peminjaman.kembalikan-denda', $peminjaman) }}" method="POST">
+                    @csrf
+                    @method('PATCH')
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700">Kondisi Alat <span class="text-red-500">*</span></label>
+                        <select name="kondisi_alat" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">
+                            <option value="">Pilih Kondisi</option>
+                            <option value="baik">Baik</option>
+                            <option value="rusak">Rusak</option>
+                            <option value="hilang">Hilang</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700">Catatan Petugas</label>
+                        <textarea name="catatan_petugas" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Catatan tambahan..."></textarea>
+                    </div>
+                    <div class="mt-4 space-y-2">
+                        <button type="submit"
+                            class="w-full rounded-md bg-orange-600 px-4 py-3 text-sm font-semibold text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            Kembalikan Alat &amp; Set Status "Di Denda"
+                        </button>
+                        <button type="button" onclick="document.getElementById('kembalikanDendaModal').classList.add('hidden')"
+                            class="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            Batal
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</x-app-layout>
+
+    <!-- ============================================================ -->
+    <!-- MODAL: Kembalikan Paksa dengan Denda (dari status: dipinjam) -->
+    <!-- Digunakan petugas jika alat sudah ada di tangan tapi user belum ajukan -->
+    <!-- ============================================================ -->
+    <div id="kembalikanDendaDariDipinjamModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex min-h-screen items-center justify-center px-4">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
+            <div class="relative z-10 w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+                <h3 class="mb-4 text-lg font-medium text-gray-900">Proses Pengembalian Langsung</h3>
+                <div class="mb-4 rounded-md bg-orange-50 p-4">
+                    <p class="text-sm text-orange-800">
+                        Alat akan dikembalikan ke stok dan status berubah menjadi <strong>"Di Denda"</strong>. 
+                        Estimasi denda: <strong>Rp {{ number_format($estimasiDenda ?? 0, 0, ',', '.') }}</strong> 
+                        ({{ $hariTerlambat ?? 0 }} hari &times; Rp 5.000).
+                    </p>
+                </div>
+                {{-- Route kembalikan-denda menerima dari pengajuan_pengembalian --}}
+                {{-- Untuk dari dipinjam, kita gunakan route baru: kembalikan-denda-paksa --}}
+                <form action="{{ route('petugas.peminjaman.kembalikan-denda-paksa', $peminjaman) }}" method="POST">
+                    @csrf
+                    @method('PATCH')
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700">Kondisi Alat <span class="text-red-500">*</span></label>
+                        <select name="kondisi_alat" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">
+                            <option value="">Pilih Kondisi</option>
+                            <option value="baik">Baik</option>
+                            <option value="rusak">Rusak</option>
+                            <option value="hilang">Hilang</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700">Tanggal Kembali Aktual</label>
+                        <input type="date" name="tanggal_kembali_actual" value="{{ date('Y-m-d') }}"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700">Catatan Petugas</label>
+                        <textarea name="catatan_petugas" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Catatan tambahan..."></textarea>
+                    </div>
+                    <div class="mt-4 space-y-2">
+                        <button type="submit"
+                            class="w-full rounded-md bg-orange-600 px-4 py-3 text-sm font-semibold text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            Proses Pengembalian &amp; Set Status "Di Denda"
+                        </button>
+                        <button type="button" onclick="document.getElementById('kembalikanDendaDariDipinjamModal').classList.add('hidden')"
+                            class="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            Batal
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</x-petugas-layout>

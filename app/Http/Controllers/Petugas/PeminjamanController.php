@@ -4,130 +4,90 @@ namespace App\Http\Controllers\Petugas;
 
 use App\Http\Controllers\Controller;
 use App\Models\Peminjaman;
-use App\Models\Alat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class PeminjamanController extends Controller
 {
     public function index(Request $request)
     {
         $query = Peminjaman::with(['user', 'alat'])->latest();
-
-        if ($request->has('status') && $request->status != '') {
+        if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
-
-        // Filter pembayaran denda
-        if ($request->has('pembayaran') && $request->pembayaran != '') {
+        if ($request->filled('pembayaran')) {
             if ($request->pembayaran === 'menunggu_verifikasi') {
                 $query->where('status_pembayaran_denda', 'menunggu_verifikasi');
-            } elseif ($request->pembayaran === 'terverifikasi') {
-                $query->where('status_pembayaran_denda', 'terverifikasi');
             } elseif ($request->pembayaran === 'ada_denda') {
                 $query->where('denda', '>', 0);
             }
         }
-
-        if ($request->has('search') && $request->search != '') {
+        if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->whereHas('user', function($userQuery) use ($search) {
-                    $userQuery->where('name', 'like', "%{$search}%");
-                })
-                ->orWhereHas('alat', function($alatQuery) use ($search) {
-                    $alatQuery->where('nama', 'like', "%{$search}%")
-                              ->orWhere('nama_alat', 'like', "%{$search}%");
-                });
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('user', fn($u) => $u->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('alat', fn($a) => $a->where('nama', 'like', "%{$search}%"));
             });
         }
-
         $peminjaman = $query->paginate(15);
-
         $stats = [
-            'total' => Peminjaman::count(),
-            'menunggu' => Peminjaman::where('status', 'menunggu')->count(),
-            'disetujui' => Peminjaman::where('status', 'disetujui')->count(),
-            'dipinjam' => Peminjaman::where('status', 'dipinjam')->count(),
-            'pengajuan_pengembalian' => Peminjaman::where('status', 'pengajuan_pengembalian')->count(),
-            'dikembalikan' => Peminjaman::where('status', 'dikembalikan')->count(),
-            'ditolak' => Peminjaman::where('status', 'ditolak')->count(),
-            // Stats denda
-            'total_denda' => Peminjaman::where('denda', '>', 0)->count(),
+            'total'                     => Peminjaman::count(),
+            'menunggu'                  => Peminjaman::where('status', 'menunggu')->count(),
+            'disetujui'                 => Peminjaman::where('status', 'disetujui')->count(),
+            'dipinjam'                  => Peminjaman::where('status', 'dipinjam')->count(),
+            'pengajuan_pengembalian'    => Peminjaman::where('status', 'pengajuan_pengembalian')->count(),
+            'di_denda'                  => Peminjaman::where('status', 'di_denda')->count(),
+            'dikembalikan'              => Peminjaman::where('status', 'dikembalikan')->count(),
+            'ditolak'                   => Peminjaman::where('status', 'ditolak')->count(),
             'menunggu_verifikasi_bayar' => Peminjaman::where('status_pembayaran_denda', 'menunggu_verifikasi')->count(),
         ];
-
         return view('petugas.peminjaman.index', compact('peminjaman', 'stats'));
     }
 
     public function show(Peminjaman $peminjaman)
     {
-        // CRITICAL: Load relasi dengan eager loading
         $peminjaman->load(['user', 'alat']);
-        
         return view('petugas.peminjaman.show', compact('peminjaman'));
     }
 
-    /**
-     * PETUGAS: Approve peminjaman
-     */
     public function approve(Peminjaman $peminjaman)
     {
         if (!in_array($peminjaman->status, ['menunggu', 'pending'])) {
             return back()->with('error', 'Hanya peminjaman yang menunggu yang bisa disetujui.');
         }
-
-        $peminjaman->update(['status' => Peminjaman::STATUS_DISETUJUI]);
-
-        return back()->with('success', 'Peminjaman berhasil disetujui. Silakan serahkan alat kepada peminjam.');
+        $peminjaman->update(['status' => 'disetujui']);
+        return back()->with('success', 'Peminjaman berhasil disetujui.');
     }
 
-    /**
-     * PETUGAS: Reject peminjaman
-     */
     public function reject(Request $request, Peminjaman $peminjaman)
     {
         if (!in_array($peminjaman->status, ['menunggu', 'pending'])) {
             return back()->with('error', 'Hanya peminjaman yang menunggu yang bisa ditolak.');
         }
-
         $peminjaman->update([
-            'status' => Peminjaman::STATUS_DITOLAK,
-            'alasan_penolakan' => $request->alasan_penolakan
+            'status'           => 'ditolak',
+            'alasan_penolakan' => $request->alasan_penolakan,
         ]);
-
         return back()->with('success', 'Peminjaman berhasil ditolak.');
     }
 
-    /**
-     * PETUGAS: Serahkan alat (status: disetujui → dipinjam)
-     */
     public function serahkan(Peminjaman $peminjaman)
     {
-        if ($peminjaman->status !== Peminjaman::STATUS_DISETUJUI) {
+        if ($peminjaman->status !== 'disetujui') {
             return back()->with('error', 'Hanya peminjaman yang sudah disetujui yang bisa diserahkan.');
         }
-
         DB::beginTransaction();
         try {
-            // Update status menjadi "dipinjam"
-            $peminjaman->update([
-                'status' => Peminjaman::STATUS_DIPINJAM,
-                'tanggal_pinjam' => now()
-            ]);
-
-            // Kurangi stok alat
-            $alat = $peminjaman->alat;
-            if ($alat) {
-                $alat->decrement('jumlah', $peminjaman->jumlah);
-
-                if ($alat->jumlah <= 0) {
-                    $alat->update(['status' => 'tidak tersedia']);
+            $peminjaman->update(['status' => 'dipinjam', 'tanggal_pinjam' => now()]);
+            if ($peminjaman->alat) {
+                $peminjaman->alat->decrement('jumlah', $peminjaman->jumlah);
+                if ($peminjaman->alat->jumlah <= 0) {
+                    $peminjaman->alat->update(['status' => 'tidak tersedia']);
                 }
             }
-
             DB::commit();
-            return back()->with('success', 'Alat berhasil diserahkan. Status berubah menjadi "Dipinjam". Stok alat telah dikurangi.');
+            return back()->with('success', 'Alat berhasil diserahkan.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
@@ -135,118 +95,171 @@ class PeminjamanController extends Controller
     }
 
     /**
-     * PETUGAS: Verifikasi pembayaran denda
+     * Kembalikan dari pengajuan_pengembalian ke di_denda
+     * FIXED: hitung ulang denda dari tanggal, tidak bergantung nilai denda tersimpan
      */
+    public function kembalikanDenda(Request $request, Peminjaman $peminjaman)
+    {
+        if ($peminjaman->status !== 'pengajuan_pengembalian') {
+            return back()->with('error', 'Status tidak sesuai.');
+        }
+
+        $request->validate([
+            'kondisi_alat'    => 'required|in:baik,rusak,hilang',
+            'catatan_petugas' => 'nullable|string|max:500',
+        ]);
+
+        // Hitung ulang denda dari tanggal, abaikan nilai denda tersimpan
+        $tanggalRencana = Carbon::parse($peminjaman->tanggal_kembali)->startOfDay();
+        $tanggalActual  = $peminjaman->tanggal_kembali_actual
+                            ? Carbon::parse($peminjaman->tanggal_kembali_actual)->startOfDay()
+                            : Carbon::now()->startOfDay();
+        $hariTerlambat  = $tanggalActual->gt($tanggalRencana) ? $tanggalRencana->diffInDays($tanggalActual) : 0;
+        $dendaHitung    = $hariTerlambat * 5000;
+
+        if ($hariTerlambat <= 0) {
+            return back()->with('error', 'Tidak ada keterlambatan. Gunakan tombol "Terima Pengembalian".');
+        }
+
+        DB::beginTransaction();
+        try {
+            $peminjaman->update([
+                'status'                  => 'di_denda',
+                'kondisi_alat'            => $request->kondisi_alat,
+                'catatan_petugas'         => $request->catatan_petugas,
+                'denda'                   => $dendaHitung,
+                'jumlah_hari_terlambat'   => $hariTerlambat,
+                'status_pembayaran_denda' => 'belum_bayar',
+                'tanggal_kembali_actual'  => $tanggalActual->toDateString(),
+            ]);
+            if ($request->kondisi_alat !== 'hilang' && $peminjaman->alat) {
+                $peminjaman->alat->increment('jumlah', $peminjaman->jumlah);
+                $peminjaman->alat->update(['status' => $request->kondisi_alat === 'baik' ? 'tersedia' : 'rusak']);
+            }
+            DB::commit();
+            return back()->with('success', 'Alat dikembalikan. Status "Di Denda". Denda: Rp ' . number_format($dendaHitung, 0, ',', '.'));
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Kembalikan paksa dari dipinjam ke di_denda
+     * Digunakan jika user belum ajukan pengembalian
+     */
+    public function kembalikanDendaPaksa(Request $request, Peminjaman $peminjaman)
+    {
+        if ($peminjaman->status !== 'dipinjam') {
+            return back()->with('error', 'Status tidak sesuai.');
+        }
+        $request->validate([
+            'kondisi_alat'           => 'required|in:baik,rusak,hilang',
+            'tanggal_kembali_actual' => 'required|date',
+            'catatan_petugas'        => 'nullable|string|max:500',
+        ]);
+        $tanggalRencana = Carbon::parse($peminjaman->tanggal_kembali)->startOfDay();
+        $tanggalActual  = Carbon::parse($request->tanggal_kembali_actual)->startOfDay();
+        $hariTerlambat  = $tanggalActual->gt($tanggalRencana) ? $tanggalRencana->diffInDays($tanggalActual) : 0;
+        $denda          = $hariTerlambat * 5000;
+
+        DB::beginTransaction();
+        try {
+            $peminjaman->update([
+                'status'                  => 'di_denda',
+                'tanggal_kembali_actual'  => $request->tanggal_kembali_actual,
+                'kondisi_alat'            => $request->kondisi_alat,
+                'catatan_petugas'         => $request->catatan_petugas,
+                'jumlah_hari_terlambat'   => $hariTerlambat,
+                'denda'                   => $denda,
+                'status_pembayaran_denda' => 'belum_bayar',
+            ]);
+            if ($request->kondisi_alat !== 'hilang' && $peminjaman->alat) {
+                $peminjaman->alat->increment('jumlah', $peminjaman->jumlah);
+                $peminjaman->alat->update(['status' => $request->kondisi_alat === 'baik' ? 'tersedia' : 'rusak']);
+            }
+            DB::commit();
+            return back()->with('success', 'Alat diproses. Status "Di Denda". Denda: Rp ' . number_format($denda, 0, ',', '.'));
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
+
+    public function selesaikanDenda(Peminjaman $peminjaman)
+    {
+        if ($peminjaman->status !== 'di_denda') {
+            return back()->with('error', 'Hanya peminjaman "Di Denda" yang bisa diselesaikan.');
+        }
+        if ($peminjaman->status_pembayaran_denda !== 'terverifikasi') {
+            return back()->with('error', 'Pembayaran denda belum terverifikasi.');
+        }
+        $peminjaman->update(['status' => 'dikembalikan']);
+        return back()->with('success', 'Peminjaman selesai. Status diubah menjadi "Dikembalikan".');
+    }
+
     public function verifikasiPembayaran(Request $request, Peminjaman $peminjaman)
     {
-        // Validasi ada denda dan bukti pembayaran
-        if ($peminjaman->denda <= 0) {
-            return back()->with('error', 'Tidak ada denda pada peminjaman ini.');
-        }
-
         if (!$peminjaman->bukti_pembayaran_denda) {
-            return back()->with('error', 'Belum ada bukti pembayaran yang diupload.');
+            return back()->with('error', 'Belum ada bukti pembayaran untuk diverifikasi.');
         }
-
         if ($peminjaman->status_pembayaran_denda === 'terverifikasi') {
             return back()->with('error', 'Pembayaran sudah terverifikasi sebelumnya.');
         }
-
-        // Update status pembayaran
-        $peminjaman->update([
-            'status_pembayaran_denda' => 'terverifikasi',
-            'catatan_petugas' => ($peminjaman->catatan_petugas ?? '') . "\n\n[Pembayaran Denda] " . ($request->catatan_petugas ?? 'Pembayaran denda telah diverifikasi dan diterima.')
-        ]);
-
-        return back()->with('success', 'Pembayaran denda berhasil diverifikasi. User dapat mengembalikan alat.');
+        $peminjaman->update(['status_pembayaran_denda' => 'terverifikasi']);
+        return back()->with('success', 'Pembayaran denda berhasil diverifikasi.');
     }
 
-    /**
-     * PETUGAS: Tolak pembayaran denda
-     */
     public function tolakPembayaran(Request $request, Peminjaman $peminjaman)
     {
-        $request->validate([
-            'catatan_petugas' => 'required|string|max:500'
-        ], [
-            'catatan_petugas.required' => 'Alasan penolakan harus diisi'
-        ]);
-
-        // Validasi
-        if ($peminjaman->denda <= 0) {
-            return back()->with('error', 'Tidak ada denda pada peminjaman ini.');
-        }
-
-        if (!$peminjaman->bukti_pembayaran_denda) {
-            return back()->with('error', 'Belum ada bukti pembayaran.');
-        }
-
-        // Update status kembali ke belum bayar dengan catatan
+        $request->validate(['catatan_petugas' => 'required|string|max:500']);
         $peminjaman->update([
-            'status_pembayaran_denda' => 'belum_bayar',
-            'catatan_admin_pembayaran' => $request->catatan_petugas
+            'status_pembayaran_denda'  => 'belum_bayar',
+            'catatan_admin_pembayaran' => $request->catatan_petugas,
         ]);
-
-        return back()->with('error', 'Pembayaran ditolak. User harus upload ulang bukti pembayaran yang benar.');
+        return back()->with('error', 'Pembayaran ditolak. User harus upload ulang bukti pembayaran.');
     }
 
-    /**
-     * PETUGAS: Terima pengembalian (status: pengajuan_pengembalian → dikembalikan)
-     */
     public function terimaKembali(Request $request, Peminjaman $peminjaman)
     {
-        if ($peminjaman->status !== Peminjaman::STATUS_PENGAJUAN_PENGEMBALIAN) {
-            return back()->with('error', 'Hanya peminjaman dengan pengajuan pengembalian yang bisa diproses.');
+        if ($peminjaman->status !== 'pengajuan_pengembalian') {
+            return back()->with('error', 'Status tidak sesuai.');
         }
+        // Hitung ulang denda
+        $tanggalRencana = Carbon::parse($peminjaman->tanggal_kembali)->startOfDay();
+        $tanggalActual  = $peminjaman->tanggal_kembali_actual
+                            ? Carbon::parse($peminjaman->tanggal_kembali_actual)->startOfDay()
+                            : Carbon::now()->startOfDay();
+        $hariTerlambat  = $tanggalActual->gt($tanggalRencana) ? $tanggalRencana->diffInDays($tanggalActual) : 0;
+        $adaDenda       = $hariTerlambat > 0 || $peminjaman->denda > 0;
 
-        // VALIDASI: Jika ada denda, harus sudah terverifikasi
-        if ($peminjaman->denda > 0 && $peminjaman->status_pembayaran_denda !== 'terverifikasi') {
-            $statusText = match($peminjaman->status_pembayaran_denda) {
-                'belum_bayar' => 'belum dibayar',
+        if ($adaDenda && $peminjaman->status_pembayaran_denda !== 'terverifikasi') {
+            $statusText = match ($peminjaman->status_pembayaran_denda) {
+                'belum_bayar'         => 'belum dibayar',
                 'menunggu_verifikasi' => 'menunggu verifikasi',
-                default => 'belum terverifikasi'
+                default               => 'belum terverifikasi',
             };
-            
-            return back()->with('error', "Pengembalian tidak dapat diproses. User memiliki denda Rp " . number_format($peminjaman->denda, 0, ',', '.') . " yang {$statusText}. Verifikasi pembayaran terlebih dahulu.");
+            return back()->with('error', "Ada denda yang {$statusText}. Verifikasi pembayaran dulu atau gunakan tombol 'Kembalikan (Status: Di Denda)'.");
         }
 
-        // Validasi kondisi alat
         $request->validate([
-            'kondisi_alat' => 'required|in:baik,rusak,hilang',
-            'catatan_petugas' => 'nullable|string|max:500'
+            'kondisi_alat'    => 'required|in:baik,rusak,hilang',
+            'catatan_petugas' => 'nullable|string|max:500',
         ]);
 
         DB::beginTransaction();
         try {
-            // Update status menjadi "dikembalikan"
-            $updateData = [
-                'status' => Peminjaman::STATUS_DIKEMBALIKAN,
-                'kondisi_alat' => $request->kondisi_alat,
-                'catatan_petugas' => $request->catatan_petugas
-            ];
-
-            // Jika tanggal_kembali_actual belum diset (untuk backward compatibility)
-            if (!$peminjaman->tanggal_kembali_actual) {
-                $updateData['tanggal_kembali_actual'] = now();
-            }
-
-            $peminjaman->update($updateData);
-
-            // Kembalikan stok alat (jika tidak hilang dan alat masih ada)
+            $peminjaman->update([
+                'status'          => 'dikembalikan',
+                'kondisi_alat'    => $request->kondisi_alat,
+                'catatan_petugas' => $request->catatan_petugas,
+            ]);
             if ($request->kondisi_alat !== 'hilang' && $peminjaman->alat) {
-                $alat = $peminjaman->alat;
-                $alat->increment('jumlah', $peminjaman->jumlah);
-
-                // Update status alat
-                if ($request->kondisi_alat === 'baik') {
-                    $alat->update(['status' => 'tersedia']);
-                } elseif ($request->kondisi_alat === 'rusak') {
-                    $alat->update(['status' => 'rusak']);
-                }
+                $peminjaman->alat->increment('jumlah', $peminjaman->jumlah);
+                $peminjaman->alat->update(['status' => $request->kondisi_alat === 'baik' ? 'tersedia' : 'rusak']);
             }
-
             DB::commit();
-            return back()->with('success', 'Pengembalian berhasil diproses. Stok alat telah dikembalikan.');
+            return back()->with('success', 'Pengembalian berhasil diproses.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
