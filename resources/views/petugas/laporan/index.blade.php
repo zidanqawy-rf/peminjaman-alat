@@ -92,13 +92,15 @@
                                 Reset
                             </a>
 
-                            <button type="button" onclick="printLaporan()"
-                                class="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700">
+                            <!-- TOMBOL CETAK - MENGGUNAKAN LINK LANGSUNG -->
+                            <a href="{{ route('petugas.laporan.print', request()->query()) }}" 
+                               target="_blank"
+                               class="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700">
                                 <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
                                 </svg>
                                 Cetak
-                            </button>
+                            </a>
                         </div>
                     </form>
                 </div>
@@ -362,12 +364,6 @@
             
             // Show selected filter input
             document.getElementById('filter-' + type).style.display = 'block';
-        }
-
-        function printLaporan() {
-            const params = new URLSearchParams(window.location.search);
-            const printUrl = '{{ route("petugas.laporan.print") }}?' + params.toString();
-            window.open(printUrl, '_blank');
         }
     </script>
     @endpush

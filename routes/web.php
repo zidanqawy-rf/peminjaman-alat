@@ -204,6 +204,10 @@ Route::prefix('petugas')->name('petugas.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Petugas\LaporanController::class, 'index'])->name('index');
             Route::get('/print', [\App\Http\Controllers\Petugas\LaporanController::class, 'print'])->name('print');
             Route::get('/export', [\App\Http\Controllers\Petugas\LaporanController::class, 'export'])->name('export');
+            
+            // PDF Routes
+            Route::get('/pdf/download', [\App\Http\Controllers\Petugas\LaporanController::class, 'downloadPdf'])->name('pdf.download');
+            Route::get('/pdf/stream', [\App\Http\Controllers\Petugas\LaporanController::class, 'streamPdf'])->name('pdf.stream');
         });
     });
 });
