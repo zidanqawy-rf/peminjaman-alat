@@ -59,17 +59,17 @@ class Peminjaman extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    /**
+     * PERBAIKAN: tambah ->with('alat') agar accessor getNamaAlatSingkat
+     * tidak error saat items di-load tanpa explicit eager-load
+     */
     public function items(): HasMany
     {
-        return $this->hasMany(PeminjamanItem::class, 'peminjaman_id');
+        return $this->hasMany(PeminjamanItem::class, 'peminjaman_id')->with('alat');
     }
 
     // ── ACCESSORS ─────────────────────────────────────────
 
-    /**
-     * Nama alat singkat untuk tampilan tabel/index
-     * Contoh: "Laptop Dell +2 lainnya"
-     */
     public function getNamaAlatSingkatAttribute(): string
     {
         if ($this->items->isEmpty()) return 'N/A';
@@ -81,9 +81,6 @@ class Peminjaman extends Model
         return $total > 1 ? "{$nama} +".($total - 1)." lainnya" : $nama;
     }
 
-    /**
-     * Total unit semua item
-     */
     public function getTotalUnitAttribute(): int
     {
         return $this->items->sum('jumlah');
@@ -91,12 +88,14 @@ class Peminjaman extends Model
 
     // ── STATUS HELPERS ────────────────────────────────────
 
-    public function isMenunggu(): bool   { return $this->status === self::STATUS_MENUNGGU; }
-    public function isDisetujui(): bool  { return $this->status === self::STATUS_DISETUJUI; }
-    public function isDipinjam(): bool   { return $this->status === self::STATUS_DIPINJAM; }
-    public function isDiDenda(): bool    { return $this->status === self::STATUS_DI_DENDA; }
-    public function isDikembalikan(): bool { return $this->status === self::STATUS_DIKEMBALIKAN; }
-    public function isDitolak(): bool    { return $this->status === self::STATUS_DITOLAK; }
+    public function isMenunggu(): bool        { return $this->status === self::STATUS_MENUNGGU; }
+    public function isDisetujui(): bool       { return $this->status === self::STATUS_DISETUJUI; }
+    public function isDipinjam(): bool        { return $this->status === self::STATUS_DIPINJAM; }
+    public function isDiDenda(): bool         { return $this->status === self::STATUS_DI_DENDA; }
+    public function isDikembalikan(): bool    { return $this->status === self::STATUS_DIKEMBALIKAN; }
+    public function isDitolak(): bool         { return $this->status === self::STATUS_DITOLAK; }
+    public function isDibatalkan(): bool      { return $this->status === self::STATUS_DIBATALKAN; }
+    public function isSelesai(): bool         { return $this->status === self::STATUS_SELESAI; }
 
     public function isPengajuanPengembalian(): bool
     {
@@ -111,9 +110,6 @@ class Peminjaman extends Model
 
     // ── BUSINESS LOGIC ────────────────────────────────────
 
-    /**
-     * Hitung denda — PERBAIKAN: rencana->diffInDays(actual) selalu positif
-     */
     public function hitungDenda(): int
     {
         if (!$this->tanggal_kembali || !$this->tanggal_kembali_actual) return 0;
@@ -124,9 +120,6 @@ class Peminjaman extends Model
         return $actual->gt($rencana) ? $rencana->diffInDays($actual) * 5000 : 0;
     }
 
-    /**
-     * Hitung hari terlambat — PERBAIKAN: rencana->diffInDays(actual) selalu positif
-     */
     public function hitungHariTerlambat(): int
     {
         if (!$this->tanggal_kembali || !$this->tanggal_kembali_actual) return 0;

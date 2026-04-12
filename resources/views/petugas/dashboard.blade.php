@@ -31,7 +31,6 @@
     <div class="bg-white rounded-lg shadow-md p-8 mb-8">
         <h4 class="text-xl font-bold text-gray-800 mb-6">Aksi Cepat</h4>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <!-- Peminjaman Button -->
             <a href="{{ route('petugas.peminjaman.index') }}?status=menunggu"
                 class="flex items-center justify-center px-6 py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg hover:shadow-lg transition-all transform hover:scale-105">
                 <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -40,7 +39,6 @@
                 <span class="font-semibold text-lg">Approve Peminjaman</span>
             </a>
 
-            <!-- Pengembalian Button -->
             <a href="{{ route('petugas.peminjaman.index') }}?status=pengajuan_pengembalian"
                 class="flex items-center justify-center px-6 py-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all transform hover:scale-105">
                 <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -50,7 +48,6 @@
                 <span class="font-semibold text-lg">Proses Pengembalian</span>
             </a>
 
-            <!-- Verifikasi Denda Button -->
             <a href="{{ route('petugas.peminjaman.index') }}?pembayaran=menunggu_verifikasi"
                 class="flex items-center justify-center px-6 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:shadow-lg transition-all transform hover:scale-105">
                 <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -130,7 +127,7 @@
             </div>
         </div>
 
-        <!-- STAT CARD BARU: Verifikasi Denda -->
+        <!-- Stat Card 5: Verifikasi Denda -->
         <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow {{ $perluVerifikasiDenda > 0 ? 'ring-2 ring-orange-400' : '' }}">
             <div class="flex items-center justify-between">
                 <div>
@@ -139,7 +136,7 @@
                         {{ $perluVerifikasiDenda }}
                     </p>
                     @if($perluVerifikasiDenda > 0)
-                        <a href="{{ route('petugas.peminjaman.index') }}?pembayaran=menunggu_verifikasi" 
+                        <a href="{{ route('petugas.peminjaman.index') }}?pembayaran=menunggu_verifikasi"
                            class="text-xs text-orange-600 hover:text-orange-800 font-medium mt-1 inline-block">
                             Verifikasi →
                         </a>
@@ -154,16 +151,16 @@
         </div>
     </div>
 
-    <!-- Alert Verifikasi Denda (jika ada) -->
+    <!-- Alert Verifikasi Denda -->
     @if($perluVerifikasiDenda > 0)
         @php
-            $peminjamanPerluVerifikasi = \App\Models\Peminjaman::with(['user', 'alat'])
+            $peminjamanPerluVerifikasi = \App\Models\Peminjaman::with(['user', 'items.alat'])
                 ->where('status_pembayaran_denda', 'menunggu_verifikasi')
                 ->latest('updated_at')
                 ->limit(5)
                 ->get();
         @endphp
-        
+
         <div class="mt-8 bg-orange-50 border-l-4 border-orange-500 p-6 rounded-lg shadow-md">
             <div class="flex items-start">
                 <div class="flex-shrink-0">
@@ -182,7 +179,7 @@
                                 <div class="flex justify-between items-start">
                                     <div class="flex-1">
                                         <p class="font-semibold text-gray-900">{{ $item->user->name }}</p>
-                                        <p class="text-sm text-gray-600">{{ $item->alat->nama }}</p>
+                                        <p class="text-sm text-gray-600">{{ $item->nama_alat_singkat }}</p>
                                         <p class="text-xs text-gray-500">
                                             Diupload {{ $item->updated_at->diffForHumans() }}
                                         </p>
@@ -192,7 +189,7 @@
                                         <span class="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded">Menunggu</span>
                                     </div>
                                 </div>
-                                <a href="{{ route('petugas.peminjaman.show', $item) }}" 
+                                <a href="{{ route('petugas.peminjaman.show', $item) }}"
                                    class="text-xs text-blue-600 hover:text-blue-800 font-medium mt-2 inline-block">
                                     Verifikasi Sekarang →
                                 </a>
@@ -200,7 +197,7 @@
                         @endforeach
                     </div>
                     @if($perluVerifikasiDenda > 5)
-                        <a href="{{ route('petugas.peminjaman.index') }}?pembayaran=menunggu_verifikasi" 
+                        <a href="{{ route('petugas.peminjaman.index') }}?pembayaran=menunggu_verifikasi"
                            class="mt-3 inline-block text-sm text-orange-700 hover:text-orange-900 font-medium">
                             Lihat Semua ({{ $perluVerifikasiDenda }}) →
                         </a>
@@ -209,4 +206,5 @@
             </div>
         </div>
     @endif
+
 </x-petugas-layout>
