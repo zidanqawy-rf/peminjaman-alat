@@ -19,17 +19,14 @@
             <div class="bg-white rounded-lg shadow-md p-8 mb-8">
                 <h4 class="text-xl font-bold text-gray-800 mb-6">Aksi Cepat</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Borrow Tools Button -->
                     <a href="{{ route('peminjaman.create') }}"
                         class="flex items-center justify-center px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:shadow-lg transition-all transform hover:scale-105">
                         <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
-                            </path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                         </svg>
                         <span class="font-semibold text-lg">Pinjam Alat</span>
                     </a>
 
-                    <!-- View Borrows Button -->
                     <a href="{{ route('peminjaman.index') }}"
                         class="flex items-center justify-center px-6 py-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all transform hover:scale-105">
                         <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -98,7 +95,7 @@
                     </div>
                 </div>
 
-                <!-- CARD BARU: Ada Denda -->
+                <!-- Ada Denda -->
                 <div class="bg-white rounded-lg shadow-md p-6 {{ $adaDenda > 0 ? 'ring-2 ring-red-400' : '' }}">
                     <div class="flex items-center justify-between">
                         <div>
@@ -124,14 +121,15 @@
             <!-- Alert Denda (jika ada) -->
             @if($adaDenda > 0)
                 @php
-                    $peminjamanDenda = \App\Models\Peminjaman::with(['alat'])
+                    // ✅ FIX: eager load items.alat, bukan alat langsung
+                    $peminjamanDenda = \App\Models\Peminjaman::with(['items.alat'])
                         ->where('user_id', Auth::id())
                         ->where('denda', '>', 0)
                         ->whereIn('status_pembayaran_denda', ['belum_bayar', 'menunggu_verifikasi'])
                         ->get();
                     $totalDenda = $peminjamanDenda->sum('denda');
                 @endphp
-                
+
                 <div class="mb-8 bg-red-50 border-l-4 border-red-500 p-6 rounded-lg shadow-md">
                     <div class="flex items-start">
                         <div class="flex-shrink-0">
@@ -142,16 +140,28 @@
                         <div class="ml-3 flex-1">
                             <h3 class="text-lg font-semibold text-red-900 mb-2">⚠️ Perhatian: Anda Memiliki Denda!</h3>
                             <p class="text-sm text-red-800 mb-3">
-                                Anda memiliki <strong>{{ $adaDenda }} peminjaman</strong> dengan total denda sebesar 
+                                Anda memiliki <strong>{{ $adaDenda }} peminjaman</strong> dengan total denda sebesar
                                 <strong class="text-lg">Rp {{ number_format($totalDenda, 0, ',', '.') }}</strong>
                             </p>
                             <div class="space-y-2">
                                 @foreach($peminjamanDenda as $item)
+                                    @php
+                                        // ✅ FIX: ambil nama alat dari items pertama
+                                        $namaAlat = $item->items->isNotEmpty()
+                                            ? optional($item->items->first()->alat)->nama
+                                              ?? optional($item->items->first()->alat)->nama_alat
+                                              ?? 'Alat tidak tersedia'
+                                            : 'Alat tidak tersedia';
+                                        $jumlahItem = $item->items->count();
+                                    @endphp
                                     <div class="bg-white p-3 rounded border border-red-200">
                                         <div class="flex justify-between items-start">
                                             <div class="flex-1">
                                                 <p class="font-semibold text-gray-900">
-                                                    {{ $item->alat ? ($item->alat->nama ?? $item->alat->nama_alat ?? 'Alat tidak tersedia') : 'Alat tidak tersedia' }}
+                                                    {{ $namaAlat }}
+                                                    @if($jumlahItem > 1)
+                                                        <span class="text-xs text-gray-500">(+{{ $jumlahItem - 1 }} alat lainnya)</span>
+                                                    @endif
                                                 </p>
                                                 <p class="text-xs text-gray-600">
                                                     Terlambat {{ $item->jumlah_hari_terlambat ?? $item->hari_terlambat ?? 0 }} hari
@@ -166,7 +176,7 @@
                                                 @endif
                                             </div>
                                         </div>
-                                        <a href="{{ route('peminjaman.show', $item) }}" 
+                                        <a href="{{ route('peminjaman.show', $item) }}"
                                            class="text-xs text-blue-600 hover:text-blue-800 font-medium mt-2 inline-block">
                                             Upload Bukti Pembayaran →
                                         </a>
@@ -180,7 +190,6 @@
 
             <!-- Features Section -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Feature Card 1 -->
                 <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
                     <div class="bg-blue-100 rounded-full w-12 h-12 flex items-center justify-center mb-4">
                         <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -195,7 +204,6 @@
                     </a>
                 </div>
 
-                <!-- Feature Card 2 -->
                 <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
                     <div class="bg-green-100 rounded-full w-12 h-12 flex items-center justify-center mb-4">
                         <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -210,7 +218,6 @@
                     </a>
                 </div>
 
-                <!-- Feature Card 3 -->
                 <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
                     <div class="bg-purple-100 rounded-full w-12 h-12 flex items-center justify-center mb-4">
                         <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -226,9 +233,10 @@
                 </div>
             </div>
 
-            <!-- Recent Borrowings (Optional) -->
+            <!-- Recent Borrowings -->
             @php
-                $recentPeminjaman = \App\Models\Peminjaman::with(['alat'])
+                // ✅ FIX: eager load items.alat, bukan alat langsung
+                $recentPeminjaman = \App\Models\Peminjaman::with(['items.alat'])
                     ->where('user_id', Auth::id())
                     ->latest()
                     ->limit(5)
@@ -256,15 +264,27 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @foreach($recentPeminjaman as $item)
+                            @php
+                                // ✅ FIX: ambil nama alat dari items pertama
+                                $namaAlat = $item->items->isNotEmpty()
+                                    ? optional($item->items->first()->alat)->nama
+                                      ?? optional($item->items->first()->alat)->nama_alat
+                                      ?? 'Alat tidak tersedia'
+                                    : 'Alat tidak tersedia';
+                                $totalUnit = $item->items->sum('jumlah');
+                            @endphp
                             <tr class="hover:bg-gray-50">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-medium text-gray-900">
-                                        {{ $item->alat ? ($item->alat->nama ?? $item->alat->nama_alat ?? 'Alat tidak tersedia') : 'Alat tidak tersedia' }}
+                                        {{ $namaAlat }}
+                                        @if($item->items->count() > 1)
+                                            <span class="text-xs text-gray-500">(+{{ $item->items->count() - 1 }} lainnya)</span>
+                                        @endif
                                     </div>
-                                    <div class="text-sm text-gray-500">{{ $item->jumlah }} unit</div>
+                                    <div class="text-sm text-gray-500">{{ $totalUnit }} unit</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ $item->tanggal_pinjam ? $item->tanggal_pinjam->format('d M Y') : '-' }}
+                                    {{ $item->tanggal_pinjam ? \Carbon\Carbon::parse($item->tanggal_pinjam)->format('d M Y') : '-' }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ $item->tanggal_kembali ? \Carbon\Carbon::parse($item->tanggal_kembali)->format('d M Y') : '-' }}
@@ -272,34 +292,22 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     @switch($item->status)
                                         @case('menunggu')
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                                Menunggu
-                                            </span>
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Menunggu</span>
                                             @break
                                         @case('disetujui')
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                Disetujui
-                                            </span>
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Disetujui</span>
                                             @break
                                         @case('dipinjam')
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                                Dipinjam
-                                            </span>
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Dipinjam</span>
                                             @break
                                         @case('pengajuan_pengembalian')
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
-                                                Pengajuan
-                                            </span>
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">Pengajuan</span>
                                             @break
                                         @case('dikembalikan')
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                                                Dikembalikan
-                                            </span>
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Dikembalikan</span>
                                             @break
                                         @case('ditolak')
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                                Ditolak
-                                            </span>
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Ditolak</span>
                                             @break
                                     @endswitch
                                 </td>

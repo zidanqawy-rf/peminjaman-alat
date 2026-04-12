@@ -8,15 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('peminjaman', function (Blueprint $table) {
-            $table->text('alasan_penolakan')->nullable()->after('catatan_petugas');
-        });
+        if (!Schema::hasColumn('peminjaman', 'alasan_penolakan')) {
+            Schema::table('peminjaman', function (Blueprint $table) {
+                $table->text('alasan_penolakan')->nullable()->after('catatan_petugas');
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('peminjaman', function (Blueprint $table) {
-            $table->dropColumn('alasan_penolakan');
-        });
+        if (Schema::hasColumn('peminjaman', 'alasan_penolakan')) {
+            Schema::table('peminjaman', function (Blueprint $table) {
+                $table->dropColumn('alasan_penolakan');
+            });
+        }
     }
 };

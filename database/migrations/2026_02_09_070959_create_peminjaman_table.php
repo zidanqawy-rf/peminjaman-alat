@@ -8,18 +8,13 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Cek dulu, jika tabel belum ada baru buat
-        if (!Schema::hasTable('peminjaman')) {
-            Schema::create('peminjaman', function (Blueprint $table) {
+        if (!Schema::hasTable('peminjaman_items')) {
+            Schema::create('peminjaman_items', function (Blueprint $table) {
                 $table->id();
-                $table->foreignId('user_id')->constrained()->onDelete('cascade');
-                $table->foreignId('tool_id')->constrained('alats')->onDelete('cascade');
+                $table->foreignId('peminjaman_id')->constrained('peminjaman')->onDelete('cascade');
+                $table->foreignId('alat_id')->constrained('alats')->onDelete('cascade');
                 $table->integer('jumlah');
-                $table->date('tanggal_pinjam');
-                $table->date('tanggal_kembali');
-                $table->date('tanggal_kembali_actual')->nullable();
-                $table->string('surat_peminjaman')->nullable();
-                $table->enum('status', ['menunggu', 'disetujui', 'ditolak', 'dikembalikan'])->default('menunggu');
+                $table->string('kondisi_alat')->nullable();
                 $table->text('catatan')->nullable();
                 $table->timestamps();
             });
@@ -28,6 +23,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('peminjaman');
+        Schema::dropIfExists('peminjaman_items');
     }
 };
