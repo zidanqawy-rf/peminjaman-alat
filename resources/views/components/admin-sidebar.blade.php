@@ -41,6 +41,17 @@
                 <span class="font-medium">Kelola Alat</span>
             </a>
 
+            {{-- ── KELOLA KATEGORI ── --}}
+            <a href="{{ route('admin.kategori.index') }}"
+                class="flex items-center px-4 py-3 rounded-lg transition-colors {{ request()->routeIs('admin.kategori.*') ? 'bg-blue-600' : 'hover:bg-slate-700' }}">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
+                    </path>
+                </svg>
+                <span class="font-medium">Kelola Kategori</span>
+            </a>
+
             {{-- ── MASTER DATA DENDA ── --}}
             <a href="{{ route('admin.denda.index') }}"
                 class="flex items-center px-4 py-3 rounded-lg transition-colors {{ request()->routeIs('admin.denda.*') ? 'bg-blue-600' : 'hover:bg-slate-700' }}">
@@ -98,8 +109,6 @@
             </form>
         </div>
     </div>
-    {{-- Spacer desktop DIHAPUS — diganti md:ml-64 di layout utama --}}
-
 
     {{-- ===== MOBILE TOPBAR ===== --}}
     <div class="md:hidden fixed top-0 left-0 right-0 z-30 flex items-center justify-between bg-gradient-to-r from-slate-800 to-slate-900 text-white p-4 shadow-lg">
@@ -136,7 +145,6 @@
 
     {{-- Spacer agar konten utama tidak tertimpa topbar mobile --}}
     <div class="md:hidden h-16"></div>
-
 
     {{-- ===== MOBILE OVERLAY ===== --}}
     <div x-show="open"
@@ -208,6 +216,17 @@
                     </path>
                 </svg>
                 <span class="font-medium">Kelola Alat</span>
+            </a>
+
+            {{-- ── KELOLA KATEGORI (MOBILE) ── --}}
+            <a href="{{ route('admin.kategori.index') }}"
+                class="flex items-center px-4 py-3 rounded-lg transition-colors {{ request()->routeIs('admin.kategori.*') ? 'bg-blue-600' : 'hover:bg-slate-700' }}">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
+                    </path>
+                </svg>
+                <span class="font-medium">Kelola Kategori</span>
             </a>
 
             <a href="{{ route('admin.denda.index') }}"

@@ -63,25 +63,38 @@ class DendaController extends Controller
         return view('admin.denda.index', compact('dendas', 'stats', 'pengaturan'));
     }
 
-    // ── SIMPAN PENGATURAN TARIF ───────────────────────────
+    // ── SIMPAN PENGATURAN TARIF & INFO PEMBAYARAN ─────────
     public function simpanPengaturan(Request $request)
     {
         $request->validate([
             'tarif_per_hari' => 'required|integer|min:0|max:1000000',
             'keterangan'     => 'nullable|string|max:255',
+            'nama_bank'      => 'required|string|max:100',
+            'no_rekening'    => 'required|string|max:50',
+            'atas_nama'      => 'required|string|max:150',
+            'no_dana'        => 'nullable|string|max:20',
+            'nama_dana'      => 'nullable|string|max:150',
         ], [
             'tarif_per_hari.required' => 'Tarif denda harus diisi.',
             'tarif_per_hari.integer'  => 'Tarif denda harus berupa angka.',
             'tarif_per_hari.min'      => 'Tarif denda minimal Rp 0.',
             'tarif_per_hari.max'      => 'Tarif denda maksimal Rp 1.000.000.',
+            'nama_bank.required'      => 'Nama bank harus diisi.',
+            'no_rekening.required'    => 'Nomor rekening harus diisi.',
+            'atas_nama.required'      => 'Nama pemilik rekening harus diisi.',
         ]);
 
         PengaturanDenda::aktif()->update([
             'tarif_per_hari' => $request->tarif_per_hari,
             'keterangan'     => $request->keterangan,
+            'nama_bank'      => $request->nama_bank,
+            'no_rekening'    => $request->no_rekening,
+            'atas_nama'      => $request->atas_nama,
+            'no_dana'        => $request->no_dana ?: null,
+            'nama_dana'      => $request->nama_dana ?: null,
         ]);
 
-        return back()->with('success', 'Tarif denda berhasil diperbarui menjadi Rp ' . number_format($request->tarif_per_hari, 0, ',', '.') . '/hari.');
+        return back()->with('success', 'Pengaturan denda berhasil diperbarui.');
     }
 
     // ── SHOW ──────────────────────────────────────────────

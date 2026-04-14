@@ -24,7 +24,7 @@
             </div>
             @endif
 
-            <!-- Info Peminjaman -->
+            {{-- ── INFO PEMINJAMAN ── --}}
             <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg mb-6">
                 <div class="p-6">
                     <div class="mb-6 flex items-center justify-between">
@@ -75,7 +75,6 @@
                                 <p class="text-sm font-medium text-red-800 mb-1">⚠️ Denda Keterlambatan</p>
                                 <p class="text-2xl font-bold text-red-700">Rp {{ number_format($peminjaman->denda, 0, ',', '.') }}</p>
                                 @if($peminjaman->jumlah_hari_terlambat > 0)
-                                {{-- ── Tarif dari master denda ── --}}
                                 <p class="text-xs text-red-600 mt-1">
                                     {{ $peminjaman->jumlah_hari_terlambat }} hari × Rp {{ number_format($pengaturan->tarif_per_hari, 0, ',', '.') }}
                                 </p>
@@ -94,7 +93,7 @@
                 </div>
             </div>
 
-            <!-- DAFTAR ALAT -->
+            {{-- ── DAFTAR ALAT ── --}}
             <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg mb-6">
                 <div class="p-6">
                     <h3 class="text-md font-semibold text-gray-900 mb-4">
@@ -132,7 +131,7 @@
                 </div>
             </div>
 
-            <!-- Foto Pengembalian -->
+            {{-- ── FOTO PENGEMBALIAN ── --}}
             @if($peminjaman->foto_pengembalian)
             <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg mb-6">
                 <div class="p-6">
@@ -143,7 +142,7 @@
             </div>
             @endif
 
-            <!-- FORM AJUKAN PENGEMBALIAN -->
+            {{-- ── FORM AJUKAN PENGEMBALIAN ── --}}
             @if($peminjaman->status === 'dipinjam')
             <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg mb-6">
                 <div class="p-6">
@@ -168,7 +167,6 @@
                                    class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100">
                             <p class="mt-1 text-xs text-gray-500">Format: JPG, PNG · Maks 2MB</p>
                         </div>
-                        {{-- ── Tarif dari master denda ── --}}
                         <div class="rounded-md bg-blue-50 p-4 text-sm text-blue-700">
                             <strong>Denda:</strong> Rp {{ number_format($pengaturan->tarif_per_hari, 0, ',', '.') }}/hari jika terlambat
                         </div>
@@ -181,70 +179,185 @@
             </div>
             @endif
 
-            <!-- UPLOAD BUKTI PEMBAYARAN -->
+            {{-- ══ UPLOAD BUKTI PEMBAYARAN ══ --}}
             @if(in_array($peminjaman->status, ['di_denda','pengajuan_pengembalian']) && $peminjaman->denda > 0)
+
+                {{-- STATUS: Belum bayar → tampilkan form + info rekening --}}
                 @if(in_array($peminjaman->status_pembayaran_denda, ['belum_bayar', null]))
                 <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg mb-6">
-                    <div class="p-6">
-                        <div class="mb-4 rounded-md bg-red-50 border-l-4 border-red-500 p-4">
-                            <p class="text-sm font-medium text-red-800">🔴 Harap bayar denda:
-                                <strong>Rp {{ number_format($peminjaman->denda, 0, ',', '.') }}</strong>
+
+                    {{-- Header merah --}}
+                    <div class="border-b border-red-100 bg-gradient-to-r from-red-50 to-orange-50 px-6 py-4">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100">
+                                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-base font-bold text-red-800">Denda Keterlambatan</h4>
+                                <p class="text-xs text-red-500">Selesaikan pembayaran untuk melanjutkan proses pengembalian</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-2xl font-bold text-red-700">Rp {{ number_format($peminjaman->denda, 0, ',', '.') }}</p>
                                 @if($peminjaman->jumlah_hari_terlambat > 0)
-                                <span class="text-xs font-normal">({{ $peminjaman->jumlah_hari_terlambat }} hari × Rp {{ number_format($pengaturan->tarif_per_hari, 0, ',', '.') }})</span>
+                                <p class="text-xs text-red-500">
+                                    {{ $peminjaman->jumlah_hari_terlambat }} hari × Rp {{ number_format($pengaturan->tarif_per_hari, 0, ',', '.') }}
+                                </p>
                                 @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-6 space-y-5">
+
+                        {{-- ── PANEL INFO REKENING (dari database) ── --}}
+                        <div class="rounded-xl border-2 border-blue-200 bg-blue-50 p-4">
+                            <div class="mb-3 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                                </svg>
+                                <p class="text-sm font-bold text-blue-800">Informasi Rekening Pembayaran</p>
+                            </div>
+
+                            {{-- Grid: Bank + Dana (jika ada) --}}
+                            <div class="grid grid-cols-1 gap-3 {{ $pengaturan->no_dana ? 'sm:grid-cols-2' : '' }}">
+
+                                {{-- Rekening Bank --}}
+                                <div class="rounded-lg bg-white border border-blue-100 p-3">
+                                    <div class="mb-2 flex items-center gap-2">
+                                        <span class="inline-flex h-6 items-center justify-center rounded-md bg-blue-600 px-2 text-xs font-bold text-white">
+                                            {{ strtoupper($pengaturan->nama_bank) }}
+                                        </span>
+                                        <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Transfer Bank</p>
+                                    </div>
+                                    <p class="text-base font-bold tracking-widest text-gray-900">{{ $pengaturan->no_rekening }}</p>
+                                    <p class="mt-0.5 text-xs text-gray-500">
+                                        a.n. <span class="font-medium text-gray-700">{{ $pengaturan->atas_nama }}</span>
+                                    </p>
+                                </div>
+
+                                {{-- Dana (hanya jika diisi admin) --}}
+                                @if($pengaturan->no_dana)
+                                <div class="rounded-lg bg-white border border-blue-100 p-3">
+                                    <div class="mb-2 flex items-center gap-2">
+                                        <span class="inline-flex h-6 items-center justify-center rounded-md bg-blue-500 px-2 text-xs font-bold text-white">DANA</span>
+                                        <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Dana</p>
+                                    </div>
+                                    <p class="text-base font-bold tracking-widest text-gray-900">{{ $pengaturan->no_dana }}</p>
+                                    <p class="mt-0.5 text-xs text-gray-500">
+                                        a.n. <span class="font-medium text-gray-700">{{ $pengaturan->nama_dana ?? $pengaturan->atas_nama }}</span>
+                                    </p>
+                                </div>
+                                @endif
+                            </div>
+
+                            <p class="mt-3 text-xs text-blue-600">
+                                ⚠️ Pastikan nominal transfer tepat
+                                <strong>Rp {{ number_format($peminjaman->denda, 0, ',', '.') }}</strong>
+                                · Simpan bukti sebelum upload.
                             </p>
                         </div>
-                        <h4 class="mb-4 text-md font-semibold text-gray-900">Upload Bukti Pembayaran</h4>
-                        <form action="{{ route('peminjaman.upload-bukti-pembayaran', $peminjaman) }}" method="POST"
-                              enctype="multipart/form-data" class="space-y-4">
-                            @csrf
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">
-                                    Bukti Pembayaran <span class="text-red-500">*</span>
-                                </label>
-                                <input type="file" name="bukti_pembayaran" accept="image/jpeg,image/png,image/jpg" required
-                                       class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:rounded-md file:border-0 file:bg-green-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-green-700 hover:file:bg-green-100">
-                            </div>
-                            <div class="rounded-md bg-blue-50 p-4 text-sm text-blue-700">
-                                <p><strong>Bank:</strong> BCA · <strong>No. Rek:</strong> 1234567890 · <strong>A/N:</strong> Laboratorium XYZ</p>
-                            </div>
-                            <button type="submit"
-                                    class="w-full rounded-md bg-green-600 px-4 py-3 text-sm font-medium text-white hover:bg-green-700">
-                                Upload Bukti Pembayaran
-                            </button>
-                        </form>
+
+                        {{-- ── FORM UPLOAD BUKTI ── --}}
+                        <div>
+                            <h4 class="mb-3 text-sm font-semibold text-gray-900">Upload Bukti Pembayaran</h4>
+                            <form action="{{ route('peminjaman.upload-bukti-pembayaran', $peminjaman) }}" method="POST"
+                                  enctype="multipart/form-data" class="space-y-4">
+                                @csrf
+                                {{-- Drop area --}}
+                                <div class="relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-6 text-center transition-colors hover:border-green-400 hover:bg-green-50"
+                                     onclick="document.getElementById('bukti_pembayaran_input').click()">
+                                    <svg class="mb-2 h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    <p class="text-sm font-medium text-gray-600">Klik untuk pilih foto bukti transfer</p>
+                                    <p class="mt-1 text-xs text-gray-400">JPG, PNG · Maks 2MB</p>
+                                    <input type="file"
+                                           id="bukti_pembayaran_input"
+                                           name="bukti_pembayaran"
+                                           accept="image/jpeg,image/png,image/jpg"
+                                           required
+                                           class="hidden"
+                                           onchange="previewBukti(this)">
+                                </div>
+
+                                {{-- Preview --}}
+                                <div id="preview-bukti" class="hidden">
+                                    <p class="mb-1 text-xs font-medium text-gray-500">Preview:</p>
+                                    <img id="preview-bukti-img" src="" alt="Preview"
+                                         class="max-w-xs rounded-lg border shadow-sm">
+                                </div>
+
+                                <button type="submit"
+                                        class="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-green-700">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                                    </svg>
+                                    Upload Bukti Pembayaran
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
+
+                {{-- STATUS: Menunggu verifikasi --}}
                 @elseif($peminjaman->status_pembayaran_denda === 'menunggu_verifikasi')
                 <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg mb-6">
-                    <div class="p-6">
-                        <div class="rounded-md bg-yellow-50 border-l-4 border-yellow-500 p-4">
-                            <p class="text-sm font-medium text-yellow-800">⏳ Bukti pembayaran sedang diverifikasi petugas...</p>
+                    <div class="border-b border-yellow-100 bg-yellow-50 px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-yellow-100">
+                                <svg class="h-5 w-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-yellow-800">Menunggu Verifikasi Petugas</p>
+                                <p class="text-xs text-yellow-600">Bukti pembayaran Anda sedang diperiksa, harap tunggu.</p>
+                            </div>
                         </div>
-                        @if($peminjaman->bukti_pembayaran_denda)
-                        <div class="mt-4">
-                            <p class="text-sm font-medium text-gray-700 mb-2">Bukti yang diupload:</p>
-                            <img src="{{ asset('storage/' . $peminjaman->bukti_pembayaran_denda) }}"
-                                 alt="Bukti" class="max-w-md rounded-lg border shadow-sm">
-                        </div>
-                        @endif
                     </div>
+                    @if($peminjaman->bukti_pembayaran_denda)
+                    <div class="p-6">
+                        <p class="mb-3 text-sm font-medium text-gray-700">Bukti yang diupload:</p>
+                        <img src="{{ asset('storage/' . $peminjaman->bukti_pembayaran_denda) }}"
+                             alt="Bukti Pembayaran" class="max-w-sm rounded-xl border shadow-sm">
+                    </div>
+                    @endif
                 </div>
+
+                {{-- STATUS: Terverifikasi --}}
                 @elseif($peminjaman->status_pembayaran_denda === 'terverifikasi')
                 <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg mb-6">
                     <div class="p-6">
-                        <div class="rounded-md bg-green-50 border-l-4 border-green-500 p-4">
-                            <p class="text-sm font-medium text-green-800">✓ Pembayaran denda telah diverifikasi.</p>
+                        <div class="flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 p-4">
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100">
+                                <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-green-800">Pembayaran Terverifikasi</p>
+                                <p class="text-xs text-green-600">Denda telah lunas. Terima kasih!</p>
+                            </div>
                         </div>
                     </div>
                 </div>
                 @endif
-            @endif
 
+            @endif
+            {{-- end upload bukti --}}
+
+            {{-- ── CATATAN ADMIN ── --}}
             @if($peminjaman->catatan_admin_pembayaran)
             <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg mb-6">
                 <div class="p-6">
-                    <div class="rounded-md bg-yellow-50 border-l-4 border-yellow-500 p-4">
+                    <div class="rounded-md border-l-4 border-yellow-500 bg-yellow-50 p-4">
                         <p class="text-sm font-medium text-yellow-800">Catatan Petugas:</p>
                         <p class="mt-1 text-sm text-yellow-700">{{ $peminjaman->catatan_admin_pembayaran }}</p>
                     </div>
@@ -263,15 +376,16 @@
 
     @push('scripts')
     <script>
-        document.getElementById('foto_pengembalian')?.addEventListener('change', function(){
-            previewImg(this, 'preview-foto');
-        });
-        document.getElementById('bukti_pembayaran')?.addEventListener('change', function(){
-            previewImg(this, 'preview-bukti');
-        });
-        function previewImg(input, id){
-            var f=input.files[0], el=document.getElementById(id);
-            if(f&&el){var r=new FileReader();r.onload=function(e){el.innerHTML='<img src="'+e.target.result+'" class="max-w-xs rounded-md border mt-2">';};r.readAsDataURL(f);}
+        function previewBukti(input) {
+            var file = input.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('preview-bukti').classList.remove('hidden');
+                    document.getElementById('preview-bukti-img').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
         }
     </script>
     @endpush

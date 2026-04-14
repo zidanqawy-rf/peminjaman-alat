@@ -32,7 +32,7 @@
         </div>
         @endif
 
-        {{-- ══ PANEL PENGATURAN TARIF DENDA ══ --}}
+        {{-- ══ PANEL PENGATURAN ══ --}}
         <div class="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-blue-100">
             <div class="flex items-center justify-between border-b border-blue-100 bg-blue-50 px-6 py-4">
                 <div class="flex items-center gap-3">
@@ -44,8 +44,8 @@
                         </svg>
                     </div>
                     <div>
-                        <h3 class="text-sm font-semibold text-blue-900">Pengaturan Tarif Denda</h3>
-                        <p class="text-xs text-blue-600">Tarif yang diubah berlaku untuk perhitungan denda baru ke depan</p>
+                        <h3 class="text-sm font-semibold text-blue-900">Pengaturan Denda & Info Pembayaran</h3>
+                        <p class="text-xs text-blue-600">Tarif dan rekening yang diubah langsung tampil ke halaman user</p>
                     </div>
                 </div>
                 <div class="text-right">
@@ -56,41 +56,160 @@
                     </p>
                 </div>
             </div>
+
             <div class="p-6">
                 <form action="{{ route('admin.denda.pengaturan') }}" method="POST">
                     @csrf @method('PATCH')
-                    <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Tarif per Hari (Rp) <span class="text-red-500">*</span>
-                            </label>
-                            <div class="relative">
-                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-sm font-medium text-gray-500 pointer-events-none">Rp</span>
-                                <input type="number"
-                                       name="tarif_per_hari"
-                                       value="{{ old('tarif_per_hari', $pengaturan->tarif_per_hari) }}"
-                                       min="0" max="1000000" required
-                                       class="w-full rounded-lg border-gray-300 pl-10 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                       placeholder="5000">
+
+                    {{-- ── BARIS 1: Tarif + Keterangan ── --}}
+                    <div class="mb-5">
+                        <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">Tarif Denda</p>
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Tarif per Hari (Rp) <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-sm font-semibold text-gray-500 pointer-events-none select-none">Rp</span>
+                                    <input type="number"
+                                           name="tarif_per_hari"
+                                           value="{{ old('tarif_per_hari', $pengaturan->tarif_per_hari) }}"
+                                           min="0" max="1000000" required
+                                           class="w-full rounded-lg border-gray-300 pl-12 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                           placeholder="5000">
+                                </div>
+                                <p class="mt-1 text-xs text-gray-400">Angka dalam rupiah, tanpa titik/koma</p>
                             </div>
-                            <p class="mt-1 text-xs text-gray-400">Angka dalam rupiah, tanpa titik/koma</p>
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Keterangan</label>
-                            <input type="text"
-                                   name="keterangan"
-                                   value="{{ old('keterangan', $pengaturan->keterangan) }}"
-                                   class="w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                   placeholder="Contoh: Tarif denda keterlambatan pengembalian alat">
+                            <div class="sm:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Keterangan</label>
+                                <input type="text"
+                                       name="keterangan"
+                                       value="{{ old('keterangan', $pengaturan->keterangan) }}"
+                                       class="w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                       placeholder="Contoh: Tarif denda keterlambatan pengembalian alat">
+                            </div>
                         </div>
                     </div>
-                    <div class="mt-4 flex items-center gap-4">
+
+                    {{-- ── BARIS 2: Info Rekening Bank ── --}}
+                    <div class="mb-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                        <div class="mb-3 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                            </svg>
+                            <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Rekening Bank Transfer</p>
+                        </div>
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Nama Bank <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text"
+                                       name="nama_bank"
+                                       value="{{ old('nama_bank', $pengaturan->nama_bank) }}"
+                                       required maxlength="100"
+                                       class="w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                       placeholder="BCA, BRI, Mandiri, dst.">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Nomor Rekening <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text"
+                                       name="no_rekening"
+                                       value="{{ old('no_rekening', $pengaturan->no_rekening) }}"
+                                       required maxlength="50"
+                                       class="w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                       placeholder="1234567890">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Atas Nama <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text"
+                                       name="atas_nama"
+                                       value="{{ old('atas_nama', $pengaturan->atas_nama) }}"
+                                       required maxlength="150"
+                                       class="w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                       placeholder="Laboratorium XYZ">
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- ── BARIS 3: Info DANA (opsional) ── --}}
+                    <div class="mb-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                        <div class="mb-3 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                            </svg>
+                            <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                Dana / Dompet Digital
+                                <span class="ml-1 text-gray-400 font-normal normal-case">(opsional)</span>
+                            </p>
+                        </div>
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Nomor Dana</label>
+                                <input type="text"
+                                       name="no_dana"
+                                       value="{{ old('no_dana', $pengaturan->no_dana) }}"
+                                       maxlength="20"
+                                       class="w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                       placeholder="08xx-xxxx-xxxx">
+                                <p class="mt-1 text-xs text-gray-400">Kosongkan jika tidak tersedia</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Nama Akun Dana</label>
+                                <input type="text"
+                                       name="nama_dana"
+                                       value="{{ old('nama_dana', $pengaturan->nama_dana) }}"
+                                       maxlength="150"
+                                       class="w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                       placeholder="Laboratorium XYZ">
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- ── Preview live info pembayaran ── --}}
+                    <div class="mb-5 rounded-xl border-2 border-dashed border-blue-200 bg-blue-50 p-4">
+                        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-blue-500">Preview — Tampilan di halaman user</p>
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div class="rounded-lg bg-white border border-blue-100 p-3">
+                                <div class="flex items-center gap-2 mb-1.5">
+                                    <span class="inline-flex h-6 items-center justify-center rounded-md bg-blue-600 px-2 text-xs font-bold text-white">
+                                        {{ strtoupper($pengaturan->nama_bank) }}
+                                    </span>
+                                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Transfer Bank</p>
+                                </div>
+                                <p class="text-sm font-bold text-gray-900 tracking-widest">{{ $pengaturan->no_rekening }}</p>
+                                <p class="text-xs text-gray-500 mt-0.5">a.n. <span class="font-medium text-gray-700">{{ $pengaturan->atas_nama }}</span></p>
+                            </div>
+                            @if($pengaturan->no_dana)
+                            <div class="rounded-lg bg-white border border-blue-100 p-3">
+                                <div class="flex items-center gap-2 mb-1.5">
+                                    <span class="inline-flex h-6 items-center justify-center rounded-md bg-blue-500 px-2 text-xs font-bold text-white">DANA</span>
+                                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Dana</p>
+                                </div>
+                                <p class="text-sm font-bold text-gray-900 tracking-widest">{{ $pengaturan->no_dana }}</p>
+                                <p class="text-xs text-gray-500 mt-0.5">a.n. <span class="font-medium text-gray-700">{{ $pengaturan->nama_dana ?? $pengaturan->atas_nama }}</span></p>
+                            </div>
+                            @else
+                            <div class="rounded-lg bg-white border border-dashed border-gray-200 p-3 flex items-center justify-center">
+                                <p class="text-xs text-gray-400">Dana tidak diaktifkan</p>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-4">
                         <button type="submit"
                                 class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                             </svg>
-                            Simpan Tarif Denda
+                            Simpan Pengaturan
                         </button>
                         <p class="text-xs text-gray-400">
                             Terakhir diperbarui: {{ $pengaturan->updated_at->format('d M Y, H:i') }}
