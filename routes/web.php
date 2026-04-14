@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\PetugasAuthController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\KategoriController;
 use App\Http\Controllers\Admin\AlatController;
+use App\Http\Controllers\Admin\DendaController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -44,23 +45,21 @@ Route::post('/logout', [AdminAuthController::class, 'logout'])
 // USER ROUTES (Dashboard User Biasa)
 // ========================================
 Route::middleware(['auth', 'verified'])->group(function () {
-    
+
     // Dashboard User
     Route::get('/dashboard', function () {
         $user = Auth::user();
-        
-        // Redirect jika ternyata admin atau petugas
+
         if ($user->role === 'admin') {
             return redirect()->route('admin.dashboard');
         } elseif ($user->role === 'petugas') {
             return redirect()->route('petugas.dashboard');
         }
-        
-        // Tampilkan dashboard user biasa
+
         return view('dashboard');
     })->name('dashboard');
 
-    // Profile routes (untuk semua user yang login)
+    // Profile routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -69,18 +68,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // PEMINJAMAN ROUTES (UNTUK USER BIASA)
     // ========================================
     Route::prefix('peminjaman')->name('peminjaman.')->group(function () {
-        Route::get('/', [PeminjamanController::class, 'index'])->name('index');
-        Route::get('/create', [PeminjamanController::class, 'create'])->name('create');
-        Route::post('/', [PeminjamanController::class, 'store'])->name('store');
+        Route::get('/',        [PeminjamanController::class, 'index'])->name('index');
+        Route::get('/create',  [PeminjamanController::class, 'create'])->name('create');
+        Route::post('/',       [PeminjamanController::class, 'store'])->name('store');
         Route::get('/{peminjaman}', [PeminjamanController::class, 'show'])->name('show');
-        
+
         // USER: Ajukan pengembalian (dengan foto & tanggal)
-        Route::post('/{peminjaman}/ajukan-pengembalian', [PeminjamanController::class, 'ajukanPengembalian'])->name('ajukan-pengembalian');
-        
+        Route::post('/{peminjaman}/ajukan-pengembalian',
+            [PeminjamanController::class, 'ajukanPengembalian']
+        )->name('ajukan-pengembalian');
+
         // USER: Upload bukti pembayaran denda
-        Route::post('/{peminjaman}/upload-bukti-pembayaran', [PeminjamanController::class, 'uploadBuktiPembayaran'])->name('upload-bukti-pembayaran');
+        Route::post('/{peminjaman}/upload-bukti-pembayaran',
+            [PeminjamanController::class, 'uploadBuktiPembayaran']
+        )->name('upload-bukti-pembayaran');
+
+        // USER: Cancel peminjaman (status menunggu)
+        Route::patch('/{peminjaman}/cancel',
+            [PeminjamanController::class, 'cancel']
+        )->name('cancel');
     });
-    
+
     // Route untuk mencari alat (AJAX)
     Route::get('/alat/cari', [PeminjamanController::class, 'cariAlat'])->name('alat.cari');
 });
@@ -89,8 +97,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // ADMIN ROUTES
 // ========================================
 Route::prefix('admin')->name('admin.')->group(function () {
-    
-    // Login admin (redirect ke universal login)
+
+    // Login admin → redirect ke universal login
     Route::middleware('guest')->group(function () {
         Route::get('login', function () {
             return redirect()->route('login');
@@ -99,8 +107,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     // Protected admin routes
     Route::middleware(['auth', \App\Http\Middleware\Admin::class])->group(function () {
-        
-        // Redirect admin home ke dashboard
+
         Route::get('/', function () {
             return redirect()->route('admin.dashboard');
         })->name('home');
@@ -119,9 +126,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('users.destroy');
 
         // User import
-        Route::get('users/import/form', [\App\Http\Controllers\Admin\UserImportController::class, 'showImportForm'])->name('users.import.form');
-        Route::post('users/import', [\App\Http\Controllers\Admin\UserImportController::class, 'import'])->name('users.import');
-        Route::get('users/import/template', [\App\Http\Controllers\Admin\UserImportController::class, 'downloadTemplate'])->name('users.template');
+        Route::get('users/import/form',      [\App\Http\Controllers\Admin\UserImportController::class, 'showImportForm'])->name('users.import.form');
+        Route::post('users/import',          [\App\Http\Controllers\Admin\UserImportController::class, 'import'])->name('users.import');
+        Route::get('users/import/template',  [\App\Http\Controllers\Admin\UserImportController::class, 'downloadTemplate'])->name('users.template');
 
         // ========================================
         // KATEGORI MANAGEMENT
@@ -132,8 +139,22 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // ALAT MANAGEMENT
         // ========================================
         Route::get('alat/template/download', [AlatController::class, 'template'])->name('alat.template');
-        Route::post('alat/import', [AlatController::class, 'import'])->name('alat.import');
+        Route::post('alat/import',           [AlatController::class, 'import'])->name('alat.import');
         Route::resource('alat', AlatController::class);
+
+        // ========================================
+        // MASTER DATA DENDA
+        // ========================================
+        Route::prefix('denda')->name('denda.')->controller(DendaController::class)->group(function () {
+            Route::get('/',                              'index')               ->name('index');
+            Route::get('/export',                        'export')              ->name('export');
+            Route::patch('/pengaturan',                  'simpanPengaturan')    ->name('pengaturan');   // <-- TAMBAHAN
+            Route::get('/{peminjaman}',                  'show')                ->name('show');
+            Route::patch('/{peminjaman}/verifikasi',     'verifikasiPembayaran')->name('verifikasi');
+            Route::patch('/{peminjaman}/tolak',          'tolakPembayaran')     ->name('tolak');
+            Route::patch('/{peminjaman}/ubah',           'ubahDenda')           ->name('ubah');
+            Route::delete('/{peminjaman}/hapus',         'hapusDenda')          ->name('hapus');
+        });
 
         // ========================================
         // LOG AKTIVITAS
@@ -146,8 +167,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 // PETUGAS ROUTES
 // ========================================
 Route::prefix('petugas')->name('petugas.')->group(function () {
-    
-    // Login petugas (redirect ke universal login)
+
+    // Login petugas → redirect ke universal login
     Route::middleware('guest')->group(function () {
         Route::get('login', function () {
             return redirect()->route('login');
@@ -156,8 +177,7 @@ Route::prefix('petugas')->name('petugas.')->group(function () {
 
     // Protected petugas routes
     Route::middleware(['auth', \App\Http\Middleware\Petugas::class])->group(function () {
-        
-        // Redirect petugas home ke dashboard
+
         Route::get('/', function () {
             return redirect()->route('petugas.dashboard');
         })->name('home');
@@ -169,45 +189,55 @@ Route::prefix('petugas')->name('petugas.')->group(function () {
         // KELOLA PEMINJAMAN
         // ========================================
         Route::prefix('peminjaman')->name('peminjaman.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Petugas\PeminjamanController::class, 'index'])->name('index');
-        Route::get('/{peminjaman}', [\App\Http\Controllers\Petugas\PeminjamanController::class, 'show'])->name('show');
+            Route::get('/',              [\App\Http\Controllers\Petugas\PeminjamanController::class, 'index'])->name('index');
+            Route::get('/{peminjaman}',  [\App\Http\Controllers\Petugas\PeminjamanController::class, 'show'])->name('show');
 
-        // Aksi persetujuan
-        Route::patch('/{peminjaman}/approve',       [\App\Http\Controllers\Petugas\PeminjamanController::class, 'approve'])->name('approve');
-        Route::patch('/{peminjaman}/reject',        [\App\Http\Controllers\Petugas\PeminjamanController::class, 'reject'])->name('reject');
+            // Aksi persetujuan
+            Route::patch('/{peminjaman}/approve', [\App\Http\Controllers\Petugas\PeminjamanController::class, 'approve'])->name('approve');
+            Route::patch('/{peminjaman}/reject',  [\App\Http\Controllers\Petugas\PeminjamanController::class, 'reject'])->name('reject');
 
-        // Serahkan alat
-        Route::patch('/{peminjaman}/serahkan',      [\App\Http\Controllers\Petugas\PeminjamanController::class, 'serahkan'])->name('serahkan');
+            // Serahkan alat
+            Route::patch('/{peminjaman}/serahkan', [\App\Http\Controllers\Petugas\PeminjamanController::class, 'serahkan'])->name('serahkan');
 
-        // Terima pengembalian normal (dari pengajuan_pengembalian → dikembalikan)
-        Route::patch('/{peminjaman}/terima-kembali', [\App\Http\Controllers\Petugas\PeminjamanController::class, 'terimaKembali'])->name('terima-kembali');
+            // Terima pengembalian normal (pengajuan_pengembalian → dikembalikan)
+            Route::patch('/{peminjaman}/terima-kembali',
+                [\App\Http\Controllers\Petugas\PeminjamanController::class, 'terimaKembali']
+            )->name('terima-kembali');
 
-        // Verifikasi / tolak pembayaran denda
-        Route::patch('/{peminjaman}/verifikasi-pembayaran', [\App\Http\Controllers\Petugas\PeminjamanController::class, 'verifikasiPembayaran'])->name('verifikasi-pembayaran');
-        Route::patch('/{peminjaman}/tolak-pembayaran',      [\App\Http\Controllers\Petugas\PeminjamanController::class, 'tolakPembayaran'])->name('tolak-pembayaran');
+            // Verifikasi / tolak pembayaran denda
+            Route::patch('/{peminjaman}/verifikasi-pembayaran',
+                [\App\Http\Controllers\Petugas\PeminjamanController::class, 'verifikasiPembayaran']
+            )->name('verifikasi-pembayaran');
 
-        // Kembalikan dengan denda dari pengajuan_pengembalian → di_denda
-        Route::patch('/{peminjaman}/kembalikan-denda',      [\App\Http\Controllers\Petugas\PeminjamanController::class, 'kembalikanDenda'])->name('kembalikan-denda');
+            Route::patch('/{peminjaman}/tolak-pembayaran',
+                [\App\Http\Controllers\Petugas\PeminjamanController::class, 'tolakPembayaran']
+            )->name('tolak-pembayaran');
 
-        // *** ROUTE BARU: Kembalikan paksa dari dipinjam → di_denda ***
-        // Digunakan ketika user belum ajukan pengembalian tapi alat sudah terlambat
-        Route::patch('/{peminjaman}/kembalikan-denda-paksa', [\App\Http\Controllers\Petugas\PeminjamanController::class, 'kembalikanDendaPaksa'])->name('kembalikan-denda-paksa');
+            // Kembalikan dengan denda (pengajuan_pengembalian → di_denda)
+            Route::patch('/{peminjaman}/kembalikan-denda',
+                [\App\Http\Controllers\Petugas\PeminjamanController::class, 'kembalikanDenda']
+            )->name('kembalikan-denda');
 
-        // Selesaikan peminjaman setelah denda lunas: di_denda → dikembalikan
-        Route::patch('/{peminjaman}/selesaikan-denda',      [\App\Http\Controllers\Petugas\PeminjamanController::class, 'selesaikanDenda'])->name('selesaikan-denda');
-    });
+            // Kembalikan paksa (dipinjam → di_denda) — jika user belum ajukan, tapi sudah terlambat
+            Route::patch('/{peminjaman}/kembalikan-denda-paksa',
+                [\App\Http\Controllers\Petugas\PeminjamanController::class, 'kembalikanDendaPaksa']
+            )->name('kembalikan-denda-paksa');
+
+            // Selesaikan peminjaman setelah denda lunas (di_denda → dikembalikan)
+            Route::patch('/{peminjaman}/selesaikan-denda',
+                [\App\Http\Controllers\Petugas\PeminjamanController::class, 'selesaikanDenda']
+            )->name('selesaikan-denda');
+        });
 
         // ========================================
         // LAPORAN
         // ========================================
         Route::prefix('laporan')->name('laporan.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Petugas\LaporanController::class, 'index'])->name('index');
-            Route::get('/print', [\App\Http\Controllers\Petugas\LaporanController::class, 'print'])->name('print');
-            Route::get('/export', [\App\Http\Controllers\Petugas\LaporanController::class, 'export'])->name('export');
-            
-            // PDF Routes
-            Route::get('/pdf/download', [\App\Http\Controllers\Petugas\LaporanController::class, 'downloadPdf'])->name('pdf.download');
-            Route::get('/pdf/stream', [\App\Http\Controllers\Petugas\LaporanController::class, 'streamPdf'])->name('pdf.stream');
+            Route::get('/',              [\App\Http\Controllers\Petugas\LaporanController::class, 'index'])->name('index');
+            Route::get('/print',         [\App\Http\Controllers\Petugas\LaporanController::class, 'print'])->name('print');
+            Route::get('/export',        [\App\Http\Controllers\Petugas\LaporanController::class, 'export'])->name('export');
+            Route::get('/pdf/download',  [\App\Http\Controllers\Petugas\LaporanController::class, 'downloadPdf'])->name('pdf.download');
+            Route::get('/pdf/stream',    [\App\Http\Controllers\Petugas\LaporanController::class, 'streamPdf'])->name('pdf.stream');
         });
     });
 });

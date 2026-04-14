@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Peminjaman;
 use App\Models\PeminjamanItem;
 use App\Models\Alat;
+use App\Models\PengaturanDenda;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -27,14 +28,13 @@ class PeminjamanController extends Controller
     // ── CREATE ────────────────────────────────────────────
     public function create()
     {
-        $alat = Alat::where('jumlah', '>', 0)
-            ->where('status', 'tersedia')
-            ->get();
+        $alat       = Alat::where('jumlah', '>', 0)->where('status', 'tersedia')->get();
+        $pengaturan = PengaturanDenda::aktif();
 
-        return view('peminjaman.create', compact('alat'));
+        return view('peminjaman.create', compact('alat', 'pengaturan'));
     }
 
-    // ── STORE (Multi Item) ────────────────────────────────
+    // ── STORE ─────────────────────────────────────────────
     public function store(Request $request)
     {
         $request->validate([
@@ -43,18 +43,16 @@ class PeminjamanController extends Controller
             'surat_peminjaman'  => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
             'catatan'           => 'nullable|string|max:500',
             'keperluan'         => 'nullable|string|max:500',
-            // items array
             'items'             => 'required|array|min:1',
             'items.*.alat_id'   => 'required|exists:alats,id',
             'items.*.jumlah'    => 'required|integer|min:1',
         ], [
-            'items.required'            => 'Pilih minimal 1 alat.',
-            'items.*.alat_id.required'  => 'Alat harus dipilih.',
-            'items.*.jumlah.required'   => 'Jumlah harus diisi.',
-            'items.*.jumlah.min'        => 'Jumlah minimal 1.',
+            'items.required'           => 'Pilih minimal 1 alat.',
+            'items.*.alat_id.required' => 'Alat harus dipilih.',
+            'items.*.jumlah.required'  => 'Jumlah harus diisi.',
+            'items.*.jumlah.min'       => 'Jumlah minimal 1.',
         ]);
 
-        // Validasi stok per alat
         foreach ($request->items as $idx => $item) {
             $alat = Alat::findOrFail($item['alat_id']);
             if ($alat->jumlah < $item['jumlah']) {
@@ -66,14 +64,12 @@ class PeminjamanController extends Controller
 
         DB::beginTransaction();
         try {
-            // Upload surat
             $suratPath = null;
             if ($request->hasFile('surat_peminjaman')) {
                 $file      = $request->file('surat_peminjaman');
                 $suratPath = $file->storeAs('surat-peminjaman', time() . '_' . $file->getClientOriginalName(), 'public');
             }
 
-            // Buat record peminjaman
             $peminjaman = Peminjaman::create([
                 'user_id'          => Auth::id(),
                 'tanggal_pinjam'   => $request->tanggal_pinjam,
@@ -84,7 +80,6 @@ class PeminjamanController extends Controller
                 'status'           => 'menunggu',
             ]);
 
-            // Buat item per alat
             foreach ($request->items as $item) {
                 PeminjamanItem::create([
                     'peminjaman_id' => $peminjaman->id,
@@ -94,14 +89,11 @@ class PeminjamanController extends Controller
             }
 
             DB::commit();
-
             return redirect()->route('peminjaman.index')
                 ->with('success', 'Pengajuan peminjaman berhasil dibuat. Menunggu persetujuan petugas.');
-
         } catch (\Exception $e) {
             DB::rollBack();
             if (isset($suratPath)) Storage::disk('public')->delete($suratPath);
-
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
         }
     }
@@ -112,8 +104,9 @@ class PeminjamanController extends Controller
         if ($peminjaman->user_id !== Auth::id()) abort(403);
 
         $peminjaman->load(['user', 'items.alat']);
+        $pengaturan = PengaturanDenda::aktif();
 
-        return view('peminjaman.show', compact('peminjaman'));
+        return view('peminjaman.show', compact('peminjaman', 'pengaturan'));
     }
 
     // ── AJUKAN PENGEMBALIAN ───────────────────────────────
@@ -134,13 +127,14 @@ class PeminjamanController extends Controller
         try {
             $fotoPath = $request->file('foto_pengembalian')->store('pengembalian', 'public');
 
-            $tanggalActual = Carbon::parse($request->tanggal_kembali_actual)->startOfDay();
+            $tarif          = PengaturanDenda::tarif();
+            $tanggalActual  = Carbon::parse($request->tanggal_kembali_actual)->startOfDay();
             $tanggalRencana = Carbon::parse($peminjaman->tanggal_kembali)->startOfDay();
 
             $hariTerlambat = $tanggalActual->gt($tanggalRencana)
                 ? $tanggalRencana->diffInDays($tanggalActual)
                 : 0;
-            $denda = $hariTerlambat * 5000;
+            $denda = $hariTerlambat * $tarif;
 
             $peminjaman->update([
                 'tanggal_kembali_actual' => $tanggalActual,
@@ -159,7 +153,6 @@ class PeminjamanController extends Controller
 
             return redirect()->route('peminjaman.show', $peminjaman)
                 ->with('success', 'Pengajuan pengembalian berhasil! Menunggu verifikasi petugas.');
-
         } catch (\Exception $e) {
             DB::rollBack();
             if (isset($fotoPath)) Storage::disk('public')->delete($fotoPath);
@@ -189,14 +182,13 @@ class PeminjamanController extends Controller
             $buktiPath = $request->file('bukti_pembayaran')->store('bukti-pembayaran', 'public');
 
             $peminjaman->update([
-                'bukti_pembayaran_denda'  => $buktiPath,
-                'status_pembayaran_denda' => 'menunggu_verifikasi',
+                'bukti_pembayaran_denda'   => $buktiPath,
+                'status_pembayaran_denda'  => 'menunggu_verifikasi',
                 'catatan_admin_pembayaran' => null,
             ]);
 
             DB::commit();
             return back()->with('success', 'Bukti pembayaran berhasil diupload. Menunggu verifikasi petugas.');
-
         } catch (\Exception $e) {
             DB::rollBack();
             if (isset($buktiPath)) Storage::disk('public')->delete($buktiPath);
@@ -223,7 +215,6 @@ class PeminjamanController extends Controller
 
             DB::commit();
             return redirect()->route('peminjaman.index')->with('success', 'Peminjaman berhasil dibatalkan.');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());

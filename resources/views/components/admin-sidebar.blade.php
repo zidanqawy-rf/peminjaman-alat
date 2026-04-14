@@ -41,6 +41,27 @@
                 <span class="font-medium">Kelola Alat</span>
             </a>
 
+            {{-- ── MASTER DATA DENDA ── --}}
+            <a href="{{ route('admin.denda.index') }}"
+                class="flex items-center px-4 py-3 rounded-lg transition-colors {{ request()->routeIs('admin.denda.*') ? 'bg-blue-600' : 'hover:bg-slate-700' }}">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                    </path>
+                </svg>
+                <span class="font-medium">Master Denda</span>
+                @php
+                    $dendaPending = \App\Models\Peminjaman::where('denda', '>', 0)
+                        ->where('status_pembayaran_denda', 'menunggu_verifikasi')
+                        ->count();
+                @endphp
+                @if($dendaPending > 0)
+                <span class="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-xs font-bold">
+                    {{ $dendaPending > 99 ? '99+' : $dendaPending }}
+                </span>
+                @endif
+            </a>
+
             <a href="{{ route('admin.log-aktivitas.index') }}"
                 class="flex items-center px-4 py-3 rounded-lg transition-colors {{ request()->routeIs('admin.log-aktivitas.*') ? 'bg-blue-600' : 'hover:bg-slate-700' }}">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -77,9 +98,7 @@
             </form>
         </div>
     </div>
-
-    {{-- Spacer agar konten utama tidak tertimpa sidebar desktop --}}
-    <div class="hidden md:block md:w-64 flex-shrink-0"></div>
+    {{-- Spacer desktop DIHAPUS — diganti md:ml-64 di layout utama --}}
 
 
     {{-- ===== MOBILE TOPBAR ===== --}}
@@ -90,11 +109,29 @@
             </svg>
             <h1 class="text-lg font-bold">Peminjaman Alat</h1>
         </div>
-        <button @click="open = !open" class="text-white hover:text-blue-200 transition-colors">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-            </svg>
-        </button>
+        <div class="flex items-center gap-3">
+            @php
+                $dendaPendingMobile = \App\Models\Peminjaman::where('denda', '>', 0)
+                    ->where('status_pembayaran_denda', 'menunggu_verifikasi')
+                    ->count();
+            @endphp
+            @if($dendaPendingMobile > 0)
+            <a href="{{ route('admin.denda.index') }}" class="relative">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="absolute -top-1.5 -right-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-bold">
+                    {{ $dendaPendingMobile > 9 ? '9+' : $dendaPendingMobile }}
+                </span>
+            </a>
+            @endif
+            <button @click="open = !open" class="text-white hover:text-blue-200 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
     </div>
 
     {{-- Spacer agar konten utama tidak tertimpa topbar mobile --}}
@@ -171,6 +208,21 @@
                     </path>
                 </svg>
                 <span class="font-medium">Kelola Alat</span>
+            </a>
+
+            <a href="{{ route('admin.denda.index') }}"
+                class="flex items-center px-4 py-3 rounded-lg transition-colors {{ request()->routeIs('admin.denda.*') ? 'bg-blue-600' : 'hover:bg-slate-700' }}">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                    </path>
+                </svg>
+                <span class="font-medium">Master Denda</span>
+                @if($dendaPendingMobile > 0)
+                <span class="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-xs font-bold">
+                    {{ $dendaPendingMobile > 99 ? '99+' : $dendaPendingMobile }}
+                </span>
+                @endif
             </a>
 
             <a href="{{ route('admin.log-aktivitas.index') }}"

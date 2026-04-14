@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Petugas;
 use App\Http\Controllers\Controller;
 use App\Models\Peminjaman;
 use App\Models\PeminjamanItem;
+use App\Models\PengaturanDenda;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -99,7 +100,6 @@ class PeminjamanController extends Controller
                 'tanggal_pinjam' => now()->toDateString(),
             ]);
 
-            // Kurangi stok semua item
             foreach ($peminjaman->items as $item) {
                 if ($item->alat) {
                     $item->alat->decrement('jumlah', $item->jumlah);
@@ -111,7 +111,6 @@ class PeminjamanController extends Controller
 
             DB::commit();
             return back()->with('success', 'Alat berhasil diserahkan kepada peminjam.');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
@@ -147,12 +146,10 @@ class PeminjamanController extends Controller
                 'catatan_petugas' => $request->catatan_petugas,
             ]);
 
-            // Kembalikan stok semua item
             $this->kembalikanStokItems($peminjaman->items, $request->kondisi_alat);
 
             DB::commit();
             return back()->with('success', 'Pengembalian berhasil diproses.');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
@@ -171,13 +168,14 @@ class PeminjamanController extends Controller
             'catatan_petugas' => 'nullable|string|max:500',
         ]);
 
+        $tarif          = PengaturanDenda::tarif();
         $tanggalRencana = Carbon::parse($peminjaman->tanggal_kembali)->startOfDay();
         $tanggalActual  = $peminjaman->tanggal_kembali_actual
             ? Carbon::parse($peminjaman->tanggal_kembali_actual)->startOfDay()
             : Carbon::now()->startOfDay();
 
         $hariTerlambat = $tanggalActual->gt($tanggalRencana) ? $tanggalRencana->diffInDays($tanggalActual) : 0;
-        $dendaHitung   = $hariTerlambat * 5000;
+        $dendaHitung   = $hariTerlambat * $tarif;
 
         if ($hariTerlambat <= 0) {
             return back()->with('error', 'Tidak ada keterlambatan. Gunakan tombol "Terima Pengembalian".');
@@ -199,7 +197,6 @@ class PeminjamanController extends Controller
 
             DB::commit();
             return back()->with('success', 'Alat dikembalikan ke stok. Status "Di Denda". Denda: Rp ' . number_format($dendaHitung, 0, ',', '.'));
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
@@ -219,10 +216,11 @@ class PeminjamanController extends Controller
             'catatan_petugas'        => 'nullable|string|max:500',
         ]);
 
+        $tarif          = PengaturanDenda::tarif();
         $tanggalRencana = Carbon::parse($peminjaman->tanggal_kembali)->startOfDay();
         $tanggalActual  = Carbon::parse($request->tanggal_kembali_actual)->startOfDay();
         $hariTerlambat  = $tanggalActual->gt($tanggalRencana) ? $tanggalRencana->diffInDays($tanggalActual) : 0;
-        $denda          = $hariTerlambat * 5000;
+        $denda          = $hariTerlambat * $tarif;
 
         DB::beginTransaction();
         try {
@@ -240,7 +238,6 @@ class PeminjamanController extends Controller
 
             DB::commit();
             return back()->with('success', 'Alat diproses. Status "Di Denda". Denda: Rp ' . number_format($denda, 0, ',', '.'));
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
@@ -285,10 +282,6 @@ class PeminjamanController extends Controller
     }
 
     // ── PRIVATE HELPER ────────────────────────────────────
-
-    /**
-     * Kembalikan stok semua item ke gudang
-     */
     private function kembalikanStokItems($items, string $kondisiAlat): void
     {
         foreach ($items as $item) {

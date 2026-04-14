@@ -75,7 +75,10 @@
                                 <p class="text-sm font-medium text-red-800 mb-1">⚠️ Denda Keterlambatan</p>
                                 <p class="text-2xl font-bold text-red-700">Rp {{ number_format($peminjaman->denda, 0, ',', '.') }}</p>
                                 @if($peminjaman->jumlah_hari_terlambat > 0)
-                                <p class="text-xs text-red-600 mt-1">{{ $peminjaman->jumlah_hari_terlambat }} hari × Rp 5.000</p>
+                                {{-- ── Tarif dari master denda ── --}}
+                                <p class="text-xs text-red-600 mt-1">
+                                    {{ $peminjaman->jumlah_hari_terlambat }} hari × Rp {{ number_format($pengaturan->tarif_per_hari, 0, ',', '.') }}
+                                </p>
                                 @endif
                                 @if($peminjaman->status_pembayaran_denda === 'terverifikasi')
                                     <span class="mt-2 inline-flex rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">✓ Terverifikasi</span>
@@ -140,9 +143,7 @@
             </div>
             @endif
 
-            <!-- ============================================================ -->
-            <!-- FORM AJUKAN PENGEMBALIAN (status: dipinjam) -->
-            <!-- ============================================================ -->
+            <!-- FORM AJUKAN PENGEMBALIAN -->
             @if($peminjaman->status === 'dipinjam')
             <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg mb-6">
                 <div class="p-6">
@@ -167,8 +168,9 @@
                                    class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100">
                             <p class="mt-1 text-xs text-gray-500">Format: JPG, PNG · Maks 2MB</p>
                         </div>
+                        {{-- ── Tarif dari master denda ── --}}
                         <div class="rounded-md bg-blue-50 p-4 text-sm text-blue-700">
-                            <strong>Denda:</strong> Rp 5.000/hari jika terlambat
+                            <strong>Denda:</strong> Rp {{ number_format($pengaturan->tarif_per_hari, 0, ',', '.') }}/hari jika terlambat
                         </div>
                         <button type="submit"
                                 class="w-full rounded-md bg-blue-600 px-4 py-3 text-sm font-medium text-white hover:bg-blue-700">
@@ -179,9 +181,7 @@
             </div>
             @endif
 
-            <!-- ============================================================ -->
-            <!-- UPLOAD BUKTI PEMBAYARAN (status: di_denda atau pengajuan_pengembalian dengan denda) -->
-            <!-- ============================================================ -->
+            <!-- UPLOAD BUKTI PEMBAYARAN -->
             @if(in_array($peminjaman->status, ['di_denda','pengajuan_pengembalian']) && $peminjaman->denda > 0)
                 @if(in_array($peminjaman->status_pembayaran_denda, ['belum_bayar', null]))
                 <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg mb-6">
@@ -189,6 +189,9 @@
                         <div class="mb-4 rounded-md bg-red-50 border-l-4 border-red-500 p-4">
                             <p class="text-sm font-medium text-red-800">🔴 Harap bayar denda:
                                 <strong>Rp {{ number_format($peminjaman->denda, 0, ',', '.') }}</strong>
+                                @if($peminjaman->jumlah_hari_terlambat > 0)
+                                <span class="text-xs font-normal">({{ $peminjaman->jumlah_hari_terlambat }} hari × Rp {{ number_format($pengaturan->tarif_per_hari, 0, ',', '.') }})</span>
+                                @endif
                             </p>
                         </div>
                         <h4 class="mb-4 text-md font-semibold text-gray-900">Upload Bukti Pembayaran</h4>

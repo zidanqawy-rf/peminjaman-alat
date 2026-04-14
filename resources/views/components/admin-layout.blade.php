@@ -16,18 +16,25 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="font-sans antialiased bg-gray-50">
-    <div class="min-h-screen flex">
+<body class="font-sans antialiased bg-gray-100">
+    <div class="min-h-screen">
         <!-- Sidebar -->
         <x-admin-sidebar />
 
-        <!-- Main Content -->
-        <div class="flex-1 flex flex-col w-full md:w-auto">
-            <!-- Header -->
-            <x-admin-header :title="$title ?? 'Admin'" :showBackButton="$showBackButton ?? false" :backUrl="$backUrl ?? '#'" />
+        <!-- Main Content Area -->
+        <div class="md:ml-64 min-h-screen flex flex-col">
+
+            <!-- Optional page header slot (used by master denda, etc.) -->
+            @if(isset($header))
+            <div class="bg-white shadow-sm border-b border-gray-200">
+                <div class="px-4 md:px-6 py-4">
+                    {{ $header }}
+                </div>
+            </div>
+            @endif
 
             <!-- Page Content -->
-            <main class="flex-1 overflow-auto p-4 md:p-6">
+            <main class="flex-1 p-4 md:p-6">
                 {{ $slot }}
             </main>
         </div>

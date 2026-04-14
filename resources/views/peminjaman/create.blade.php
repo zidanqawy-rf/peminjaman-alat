@@ -94,7 +94,6 @@
 
             <form action="{{ route('peminjaman.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
-                {{-- Items array diisi oleh JS --}}
                 <div id="h_items_container"></div>
 
                 <div style="display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start;">
@@ -196,12 +195,14 @@
                                 <label class="pm-label">Catatan <span style="font-weight:400;color:#64748b;">(Opsional)</span></label>
                                 <textarea name="catatan" rows="3" class="pm-input" style="resize:vertical;" placeholder="Catatan tambahan...">{{ old('catatan') }}</textarea>
                             </div>
+
+                            {{-- ── INFORMASI PENTING (tarif dari master denda) ── --}}
                             <div class="pm-info">
                                 <p style="font-size:13px;font-weight:600;color:#1e40af;margin-bottom:5px;">ℹ️ Informasi Penting</p>
                                 <ul style="font-size:12px;color:#1d4ed8;list-style:disc;padding-left:16px;line-height:1.9;">
                                     <li>Bisa meminjam <strong>lebih dari 1 jenis alat</strong> sekaligus</li>
                                     <li>Pengajuan diproses maksimal 1×24 jam</li>
-                                    <li>Denda keterlambatan: <strong>Rp 5.000/hari</strong></li>
+                                    <li>Denda keterlambatan: <strong>Rp {{ number_format($pengaturan->tarif_per_hari, 0, ',', '.') }}/hari</strong></li>
                                 </ul>
                             </div>
                         </div>
@@ -258,7 +259,7 @@
 
     <script>
     var ALAT_DATA = @json($alatJs);
-    var CART = {}; // { id -> { id, nama, stok, qty, img } }
+    var CART = {};
 
     function toggleItem(id) {
         CART[id] ? removeItem(id) : addItem(id);
@@ -292,7 +293,7 @@
     function changeQty(id, delta) {
         if (!CART[id]) return;
         var next = CART[id].qty + delta;
-        if (next < 1)            { removeItem(id); return; }
+        if (next < 1)             { removeItem(id); return; }
         if (next > CART[id].stok) return;
         CART[id].qty = next;
         renderCart(); syncHidden();
@@ -324,7 +325,6 @@
         document.getElementById('pmTotalUnit').textContent=total+' unit';
     }
 
-    // KUNCI: kirim items sebagai array ke server
     function syncHidden() {
         var container = document.getElementById('h_items_container');
         container.innerHTML = '';
